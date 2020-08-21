@@ -6,13 +6,13 @@ class GitlabSchema < GraphQL::Schema
   DEFAULT_MAX_COMPLEXITY   = 200
   AUTHENTICATED_COMPLEXITY = 250
   ADMIN_COMPLEXITY         = 300
+  RESOURCE_ACCESS_ERROR = "The resource that you are attempting to access does not exist or you don't have permission to perform this action"
 
   DEFAULT_MAX_DEPTH = 15
   AUTHENTICATED_MAX_DEPTH = 20
 
   use GraphQL::Pagination::Connections
   use BatchLoader::GraphQL
-  use Gitlab::Graphql::Authorize
   use Gitlab::Graphql::Present
   use Gitlab::Graphql::CallsGitaly
   use Gitlab::Graphql::Pagination::Connections
@@ -134,6 +134,14 @@ class GitlabSchema < GraphQL::Schema
       end
 
       gid
+    end
+
+    def unauthorized_object(unauthorized_error)
+      if unauthorized_error.context.query.mutation? && unauthorized_error.type < ::Mutations::BaseMutation
+        raise Gitlab::Graphql::Errors::ResourceNotAvailable, RESOURCE_ACCESS_ERROR
+      else
+        nil
+      end
     end
 
     private

@@ -6,6 +6,8 @@ module Resolvers
     prepend ManualAuthorization
     include Gitlab::Graphql::Authorize::AuthorizeResource
 
+    authorizes_object!
+
     type Types::BoardListType, null: true
     extras [:lookahead]
 
@@ -22,13 +24,11 @@ module Resolvers
     alias_method :board, :object
 
     def resolve(lookahead: nil, id: nil, issue_filters: {})
-      authorize!(board)
-
       lists = board_lists(id)
       context.scoped_set!(:issue_filters, issue_filters(issue_filters))
 
       if load_preferences?(lookahead)
-        List.preload_preferences_for_user(lists, context[:current_user])
+        List.preload_preferences_for_user(lists, current_user)
       end
 
       offset_pagination(lists)
@@ -39,7 +39,7 @@ module Resolvers
     def board_lists(id)
       service = ::Boards::Lists::ListService.new(
         board.resource_parent,
-        context[:current_user],
+        current_user,
         list_id: extract_list_id(id)
       )
 
@@ -47,7 +47,8 @@ module Resolvers
     end
 
     def load_preferences?(lookahead)
-      lookahead&.selection(:edges)&.selection(:node)&.selects?(:collapsed)
+      lookahead&.selection(:edges)&.selection(:node)&.selects?(:collapsed) ||
+        lookahead&.selection(:nodes)&.selects?(:collapsed)
     end
 
     def extract_list_id(gid)

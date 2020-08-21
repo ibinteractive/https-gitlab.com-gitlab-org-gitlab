@@ -2,23 +2,25 @@
 
 module Types
   class BaseField < GraphQL::Schema::Field
-    prepend Gitlab::Graphql::Authorize
     include GitlabStyleDeprecations
 
     argument_class ::Types::BaseArgument
 
     DEFAULT_COMPLEXITY = 1
 
-    def initialize(*args, **kwargs, &block)
+    def initialize(**kwargs, &block)
       @calls_gitaly = !!kwargs.delete(:calls_gitaly)
       @constant_complexity = !!kwargs[:complexity]
       @requires_argument = !!kwargs.delete(:requires_argument)
+      @authorize = Array.wrap(kwargs.delete(:authorize))
       kwargs[:complexity] = field_complexity(kwargs[:resolver_class], kwargs[:complexity])
       @feature_flag = kwargs[:feature_flag]
       kwargs = check_feature_flag(kwargs)
       kwargs = gitlab_deprecation(kwargs)
 
-      super(*args, **kwargs, &block)
+      super(**kwargs, &block)
+
+      extension Gitlab::Graphql::ConnectionFilterExtension # if connection?
     end
 
     def requires_argument?
@@ -30,7 +32,7 @@ module Types
     def resolve_field(obj, args, ctx)
       ctx.schema.after_lazy(obj) do |after_obj|
         query_ctx = ctx.query.context
-        inner_obj = after_obj && after_obj.object
+        inner_obj = after_obj&.object
 
         ctx.schema.after_lazy(to_ruby_args(after_obj, args, ctx)) do |ruby_args|
           if authorized?(inner_obj, ruby_args, query_ctx)
@@ -51,6 +53,37 @@ module Types
           end
         end
       end
+    end
+
+    # By default fields authorize against the current object, but that is not how our
+    # resolvers work - they use declarative permissions to authorize fields
+    # manually (so we make them opt in).
+    # TODO: separate out authorize into permissions on the object, and on the
+    #       resolved values
+    def authorized?(object, args, ctx)
+      if @authorize.present?
+        user = ctx[:current_user]
+        return @authorize.all? { |p| Ability.allowed?(user, p, object) }
+      end
+
+      if resolver_does_not_consider_object?
+        true # ok to proceed
+      else
+        super
+      end
+    end
+
+    # Historically our resolvers have used declarative permission checks only
+    # for _what they resolved_, not the _object they resolved these things from_
+    # We preserve these semantics here:
+    def resolver_does_not_consider_object?
+      rc = @resolver_class
+      return false if rc.nil? # no resolver => no way to know!
+
+      # Resolvers must opt-in to have their objects checked
+      return false if rc.respond_to?(:authorizes_object?) && rc.authorizes_object?
+
+      true # by default, permissions on resolvers apply to field values, not objects
     end
 
     def base_complexity

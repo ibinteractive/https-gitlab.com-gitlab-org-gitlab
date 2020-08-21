@@ -151,5 +151,13 @@ module Resolvers
     def select_result(results)
       results
     end
+
+    def self.authorization
+      @authorization ||= ::Gitlab::Graphql::Authorize::ObjectAuthorization.new(try(:required_permissions))
+    end
+
+    def self.authorized?(object, context)
+      authorization.ok?(object, context[:current_user])
+    end
   end
 end

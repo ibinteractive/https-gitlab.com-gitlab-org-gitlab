@@ -16,22 +16,73 @@ module GraphqlHelpers
     underscored_field_name.to_s.camelize(:lower)
   end
 
-  # Run a loader's named resolver in a way that closely mimics the framework.
-  #
-  # First the `ready?` method is called. If it turns out that the resolver is not
-  # ready, then the early return is returned instead.
-  #
-  # Then the resolve method is called.
-  def resolve(resolver_class, args: {}, lookahead: :not_given, parent: :not_given, **resolver_args)
-    args = aliased_args(resolver_class, args)
-    args[:parent] = parent unless parent == :not_given
-    args[:lookahead] = lookahead unless lookahead == :not_given
-    resolver = resolver_instance(resolver_class, **resolver_args)
-    ready, early_return = sync_all { resolver.ready?(**args) }
+  def self.deep_fieldnamerize(map)
+    map.to_h do |k, v|
+      [fieldnamerize(k), v.is_a?(Hash) ? deep_fieldnamerize(v) : v]
+    end
+  end
 
-    return early_return unless ready
+  # Run this resolver exactly as it would be called in the framework. This
+  # includes all authorization hooks, all argument processing and all result
+  # wrapping.
+  def resolve(
+    resolver_class, # The resolver at test. Should be a BaseResolver
+    obj: nil, args: {}, ctx: {}, schema: GitlabSchema,
+    parent: :not_given,
+    lookahead: :not_given)
+    # All resolution goes through fields, so we need to create one here that
+    # uses our resolver. Thankfully, apart from the field name, resolvers
+    # contain all the configuration needed to define one.
+    field_options = resolver_class.field_options.merge(name: 'value')
+    field = ::Types::BaseField.new(**field_options)
 
-    resolver.resolve(**args)
+    resolve_field(field, obj, args: args, ctx: ctx, schema: schema,
+                  parent_class: resolver_parent,
+                  extras: { parent: parent, lookahead: lookahead })
+  end
+
+  def resolve_field(
+    field,    # An instance of BaseField, or the name of a field on the current described_class
+    object,   # The current object of the BaseObject this field 'belongs' to
+    ctx: {}, # Context values (important ones are :current_user)
+    current_user: :not_given, # The current user (specified explicitly)
+    args: {}, # Field arguments (keys will be fieldnamerized)
+    extras: {}, # Stub values for field extras (parent and lookahead)
+    schema: GitlabSchema, # A specific schema instance
+    parent_class: described_class)
+    field = to_base_field(field)
+    ctx[:current_user] = current_user unless current_user == :not_given
+    query = GraphQL::Query.new(schema, context: ctx)
+    extras[:lookahead] = negative_lookahead if extras[:lookahead] == :not_given && field.extras.include?(:lookahead)
+
+    query_ctx = query.context
+
+    mock_extras(query_ctx, **extras)
+
+    parent = parent_class.authorized_new(object, query_ctx)
+    raise UnauthorizedObject unless parent
+
+    # TODO: This will need to change when we move to the interpreter:
+    # At that point, arguments will be a plain ruby hash rather than
+    # an Arguments object
+    arguments = field.to_graphql.arguments_class.new(
+      GraphqlHelpers.deep_fieldnamerize(args),
+      context: query_ctx,
+      defaults_used: []
+    )
+
+    # TODO: This will need to change when we move to the interpreter - at that
+    # point we will call `field#resolve`
+    field.resolve_field(parent, arguments, query_ctx)
+  end
+
+  def mock_extras(context, parent: :not_given, lookahead: :not_given)
+    allow(context).to receive(:parent).and_return(parent) unless parent == :not_given
+    allow(context).to receive(:lookahead).and_return(lookahead) unless lookahead == :not_given
+  end
+
+  def resolver_parent
+    @resolver_parent ||= Class.new(::Types::BaseObject) { graphql_name 'ResolverParent' }
   end
 
   # TODO: Remove this method entirely when GraphqlHelpers uses real resolve_field
@@ -125,11 +176,15 @@ module GraphqlHelpers
   end
 
   def graphql_query_for(name, attributes = {}, fields = nil)
-    <<~QUERY
-    {
-      #{query_graphql_field(name, attributes, fields)}
-    }
-    QUERY
+    type = GitlabSchema.types['Query'].fields[GraphqlHelpers.fieldnamerize(name)]&.type
+    wrap_query(query_graphql_field(name, attributes, fields, type))
+  end
+
+  def wrap_query(query)
+    q = query.to_s
+    return q if q.starts_with?('{')
+
+    "{ #{q} }"
   end
 
   def graphql_mutation(name, input, fields = nil, &block)
@@ -165,17 +220,6 @@ module GraphqlHelpers
     return variables if variables.is_a?(String)
 
     ::Gitlab::Utils::MergeHash.merge(Array.wrap(variables).map(&:to_h)).to_json
-  end
-
-  def resolve_field(name, object, args = {}, current_user: nil)
-    q = GraphQL::Query.new(GitlabSchema)
-    context = GraphQL::Query::Context.new(query: q, object: object, values: { current_user: current_user })
-    allow(context).to receive(:parent).and_return(nil)
-    field = described_class.fields.fetch(GraphqlHelpers.fieldnamerize(name))
-    instance = described_class.authorized_new(object, context)
-    raise UnauthorizedObject unless instance
-
-    field.resolve_field(instance, args, context)
   end
 
   def simple_resolver(resolved_value = 'Resolved value')
@@ -219,12 +263,13 @@ module GraphqlHelpers
     "#{namerized}#{field_params}"
   end
 
-  def query_graphql_field(name, attributes = {}, fields = nil)
+  def query_graphql_field(name, attributes = {}, fields = nil, type = nil)
+    type ||= name.to_s.classify
     attributes, fields = [nil, attributes] if fields.nil? && !attributes.is_a?(Hash)
 
     field = field_with_params(name, attributes)
 
-    field + wrap_fields(fields || all_graphql_fields_for(name.to_s.classify)).to_s
+    field + wrap_fields(fields || all_graphql_fields_for(type)).to_s
   end
 
   def page_info_selection
@@ -277,8 +322,8 @@ module GraphqlHelpers
     allow_high_graphql_recursion
     allow_high_graphql_transaction_threshold
 
-    type = GitlabSchema.types[class_name.to_s]
-    return "" unless type
+    type = class_name.respond_to?(:kind) ? class_name : GitlabSchema.types[class_name.to_s]
+    raise "#{class_name} is not a known type in the GitlabSchema" unless type
 
     # We can't guess arguments, so skip fields that require them
     skip = ->(name, field) { excluded.include?(name) || required_arguments?(field) }
@@ -287,7 +332,7 @@ module GraphqlHelpers
   end
 
   def with_signature(variables, query)
-    %Q[query(#{variables.map(&:sig).join(', ')}) #{query}]
+    %Q[query(#{variables.map(&:sig).join(', ')}) #{wrap_query(query)}]
   end
 
   def var(type)
@@ -305,6 +350,10 @@ module GraphqlHelpers
   def post_graphql(query, current_user: nil, variables: nil, headers: {})
     params = { query: query, variables: serialize_variables(variables) }
     post api('/', current_user, version: 'graphql'), params: params, headers: headers
+
+    if graphql_errors # Errors are acceptable, but not this one:
+      expect(graphql_errors).not_to include(a_hash_including('message' => 'Internal server error'))
+    end
   end
 
   def post_graphql_mutation(mutation, current_user: nil)
@@ -374,7 +423,7 @@ module GraphqlHelpers
   end
 
   # Raises an error if no data is found
-  def graphql_data(body = json_response)
+  def graphql_data(body = fresh_response_data)
     # Note that `json_response` is defined as `let(:json_response)` and
     # therefore, in a spec with multiple queries, will only contain data
     # from the _first_ query, not subsequent ones
@@ -550,7 +599,6 @@ module GraphqlHelpers
   def execute_query(query_type)
     schema = Class.new(GraphQL::Schema) do
       use GraphQL::Pagination::Connections
-      use Gitlab::Graphql::Authorize
       use Gitlab::Graphql::Pagination::Connections
 
       lazy_resolve ::Gitlab::Graphql::Lazy, :force
@@ -577,6 +625,23 @@ module GraphqlHelpers
     double(selects?: false).tap do |selection|
       allow(selection).to receive(:selection).and_return(selection)
     end
+  end
+
+  private
+
+  def to_base_field(name_or_field)
+    case name_or_field
+    when ::Types::BaseField
+      name_or_field
+    else
+      field_by_name(name_or_field)
+    end
+  end
+
+  def field_by_name(name)
+    name = ::GraphqlHelpers.fieldnamerize(name)
+
+    described_class.fields[name] || (raise ArgumentError, "Unknown field #{name} for #{described_class.graphql_name}")
   end
 end
 

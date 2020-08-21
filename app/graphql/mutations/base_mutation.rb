@@ -2,7 +2,7 @@
 
 module Mutations
   class BaseMutation < GraphQL::Schema::RelayClassicMutation
-    prepend Gitlab::Graphql::Authorize::AuthorizeResource
+    include Gitlab::Graphql::Authorize::AuthorizeResource
     prepend Gitlab::Graphql::CopyFieldDescription
     prepend ::Gitlab::Graphql::GlobalIDCompatibility
 
@@ -33,6 +33,28 @@ module Mutations
       else
         true
       end
+    end
+
+    def load_application_object(argument, lookup_as_type, id, context)
+      ::Gitlab::Graphql::Lazy.new { super }.catch(::GraphQL::UnauthorizedError) do |e|
+        Gitlab::ErrorTracking.track_exception(e, current_user: current_user&.username)
+        # The default behaviour is to abort processing and return nil for the
+        # entire mutation field, but not set any top-level errors. We prefer to
+        # at least say that something went wrong.
+        raise Gitlab::Graphql::Errors::ResourceNotAvailable, RESOURCE_ACCESS_ERROR
+      end
+    end
+
+    def self.authorized?(object, context)
+      # we never provide an object to mutations, but we do need to have a user.
+      context[:current_user].present? && !context[:current_user].blocked?
+    end
+
+    def authorized_resource?(object)
+      abilities = Array.wrap(self.class.authorize)
+      user = current_user
+
+      abilities.all? { |ability| Ability.allowed?(user, ability, object) }
     end
   end
 end

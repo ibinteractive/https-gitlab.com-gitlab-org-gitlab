@@ -210,6 +210,6 @@ RSpec.describe ::CachingArrayResolver do
     args = { is_admin: admin }
     opts = resolver.field_options
     allow(resolver).to receive(:field_options).and_return(opts.merge(max_page_size: max_page_size))
-    resolve(resolver, args: args, ctx: query_context, schema: schema, field: field)
+    resolve(resolver, args: args, ctx: query_context, schema: schema)
   end
 end
