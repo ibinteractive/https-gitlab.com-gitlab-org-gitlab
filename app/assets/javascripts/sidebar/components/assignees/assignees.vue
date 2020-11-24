@@ -29,6 +29,9 @@ export default {
       default: 'issue',
     },
   },
+  mounted() {
+    console.log('Assignees::users', this.users);
+  },
   computed: {
     hasNoUsers() {
       return !this.users.length;

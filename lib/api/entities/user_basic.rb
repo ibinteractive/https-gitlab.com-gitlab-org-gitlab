@@ -15,8 +15,6 @@ module API
       expose :web_url do |user, options|
         Gitlab::Routing.url_helpers.user_url(user)
       end
-
-      expose :status
     end
   end
 end
