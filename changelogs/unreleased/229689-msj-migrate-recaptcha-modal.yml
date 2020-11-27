@@ -1,0 +1,5 @@
+---
+title: Migrate reCAPTCHA DeprecatedModal to GlModal
+merge_request: 48688
+author:
+type: changed
