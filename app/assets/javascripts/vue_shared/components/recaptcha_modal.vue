@@ -1,6 +1,6 @@
 <script>
 /* eslint-disable vue/no-v-html */
-import GlModal from '@gitlab/ui';
+import { GlModal } from '@gitlab/ui';
 import { eventHub } from './recaptcha_eventhub';
 
 export default {
