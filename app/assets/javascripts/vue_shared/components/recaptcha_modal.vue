@@ -1,13 +1,13 @@
 <script>
 /* eslint-disable vue/no-v-html */
-import DeprecatedModal from './deprecated_modal.vue';
+import GlModal from '@gitlab/ui';
 import { eventHub } from './recaptcha_eventhub';
 
 export default {
   name: 'RecaptchaModal',
 
   components: {
-    DeprecatedModal,
+    GlModal,
   },
 
   props: {
@@ -75,7 +75,7 @@ export default {
 </script>
 
 <template>
-  <deprecated-modal
+  <gl-modal
     :hide-footer="true"
     :title="__('Please solve the reCAPTCHA')"
     kind="warning"
@@ -86,5 +86,5 @@ export default {
       <p>{{ __('We want to be sure it is you, please confirm you are not a robot.') }}</p>
       <div ref="recaptcha" v-html="html"></div>
     </div>
-  </deprecated-modal>
+  </gl-modal>
 </template>
