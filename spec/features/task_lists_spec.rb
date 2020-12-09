@@ -69,7 +69,28 @@ RSpec.describe 'Task Lists', :js do
         wait_for_requests
 
         expect(page).to have_selector(".md .task-list .task-list-item .task-list-item-checkbox")
-        expect(page).to have_selector('.btn-close')
+      end
+
+      context 'when `remove_comment_close_reopen` is enabled' do
+        it 'does not contain the close button' do
+          visit_issue(project, issue)
+          wait_for_requests
+
+          expect(page).not_to have_selector('.btn-close')
+        end
+      end
+
+      context 'when `remove_comment_close_reopen` is disabled' do
+        before do
+          stub_feature_flags(remove_comment_close_reopen: false)
+        end
+
+        it 'contains the close button' do
+          visit_issue(project, issue)
+          wait_for_requests
+
+          expect(page).to have_selector('.btn-close')
+        end
       end
 
       it 'is only editable by author' do

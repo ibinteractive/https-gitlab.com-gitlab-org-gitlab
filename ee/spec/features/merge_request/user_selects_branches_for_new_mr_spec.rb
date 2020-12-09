@@ -13,6 +13,8 @@ RSpec.describe 'Merge request > User selects branches for new MR', :js do
   end
 
   before do
+    stub_feature_flags(remove_comment_close_reopen: false)
+
     project.add_maintainer(user)
     sign_in(user)
   end

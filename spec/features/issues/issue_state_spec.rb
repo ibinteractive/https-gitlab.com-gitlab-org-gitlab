@@ -7,6 +7,7 @@ RSpec.describe 'issue state', :js do
   let_it_be(:user) { create(:user) }
 
   before do
+    stub_feature_flags(remove_comment_close_reopen: false)
     project.add_developer(user)
     sign_in(user)
   end

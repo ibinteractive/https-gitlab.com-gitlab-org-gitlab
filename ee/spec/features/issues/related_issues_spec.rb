@@ -14,6 +14,10 @@ RSpec.describe 'Related issues', :js do
   let_it_be(:issue_project_b_a) { create(:issue, project: project_b) }
   let_it_be(:issue_project_unauthorized_a) { create(:issue, project: project_unauthorized) }
 
+  before do
+    stub_feature_flags(remove_comment_close_reopen: false)
+  end
+
   shared_examples 'issue closed by modal' do |selector|
     it 'shows a modal to confirm closing the issue' do
       # Workaround for modal not showing when issue is first added

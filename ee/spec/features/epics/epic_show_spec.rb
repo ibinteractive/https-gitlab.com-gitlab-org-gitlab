@@ -28,6 +28,8 @@ RSpec.describe 'Epic show', :js do
   let_it_be(:child_issue_a) { create(:epic_issue, epic: epic, issue: public_issue, relative_position: 1) }
 
   before do
+    stub_feature_flags(remove_comment_close_reopen: false)
+
     group.add_developer(user)
     stub_licensed_features(epics: true, subepics: true)
     sign_in(user)
