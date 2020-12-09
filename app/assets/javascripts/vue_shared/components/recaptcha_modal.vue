@@ -87,7 +87,7 @@ export default {
     class="recaptcha-modal js-recaptcha-modal"
     @cancel="close"
   >
-    <p>{{ __('We want to be sure it is you, please confirm you are not a robot.') }}</p>
+    <p>{{ __('We want to be sure it is you. Please confirm you are not a robot.') }}</p>
     <div ref="recaptcha" v-html="html"></div>
   </gl-modal>
 </template>

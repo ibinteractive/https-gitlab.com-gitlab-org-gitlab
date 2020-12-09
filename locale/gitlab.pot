@@ -31746,7 +31746,7 @@ msgstr ""
 msgid "We tried to automatically renew your subscription for %{strong}%{namespace_name}%{strong_close} on %{expires_on} but something went wrong so your subscription was downgraded to the free plan. Don't worry, your data is safe. We suggest you check your payment method and get in touch with our support team (%{support_link}). They'll gladly help with your subscription renewal."
 msgstr ""
 
-msgid "We want to be sure it is you, please confirm you are not a robot."
+msgid "We want to be sure it is you. Please confirm you are not a robot."
 msgstr ""
 
 msgid "We will notify %{inviter} that you declined their invitation to join GitLab. You will stop receiving reminders."
