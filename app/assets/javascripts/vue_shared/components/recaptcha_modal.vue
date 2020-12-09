@@ -1,15 +1,14 @@
 <script>
 /* eslint-disable vue/no-v-html */
 import { GlModal } from '@gitlab/ui';
+import { isEmpty } from 'lodash';
 import { eventHub } from './recaptcha_eventhub';
 
 export default {
   name: 'RecaptchaModal',
-
   components: {
     GlModal,
   },
-
   props: {
     html: {
       type: String,
@@ -42,7 +41,11 @@ export default {
   beforeDestroy() {
     eventHub.$off('submit', this.submit);
   },
-
+  computed: {
+    show() {
+      return !isEmpty(this.html);
+    },
+  },
   methods: {
     appendRecaptchaScript() {
       this.removeRecaptchaScript();
@@ -68,7 +71,7 @@ export default {
     },
 
     submit() {
-      this.$el.querySelector('form').submit();
+      this.$refs.recaptcha.querySelector('form').submit();
     },
   },
 };
@@ -76,15 +79,15 @@ export default {
 
 <template>
   <gl-modal
+    :visible="show"
     :hide-footer="true"
     :title="__('Please solve the reCAPTCHA')"
+    modal-id="recaptcha-modal"
     kind="warning"
     class="recaptcha-modal js-recaptcha-modal"
     @cancel="close"
   >
-    <div slot="body">
-      <p>{{ __('We want to be sure it is you, please confirm you are not a robot.') }}</p>
-      <div ref="recaptcha" v-html="html"></div>
-    </div>
+    <p>{{ __('We want to be sure it is you, please confirm you are not a robot.') }}</p>
+    <div ref="recaptcha" v-html="html"></div>
   </gl-modal>
 </template>
