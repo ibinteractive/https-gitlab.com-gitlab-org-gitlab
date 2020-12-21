@@ -12,7 +12,7 @@ module IncidentManagement
     # @param starts_at [ActiveSupport::TimeWithZone]
     # @param ends_at [ActiveSupport::TimeWithZone]
     # @return [IncidentManagement::OncallShift]
-    def for_timeframe(starts_at:, ends_at:)
+    def for_timeframe(starts_at:, ends_at:, exclude_persisted: false)
       starts_at = [apply_timezone(starts_at), rotation_starts_at].max
       ends_at = apply_timezone(ends_at)
 
@@ -24,10 +24,15 @@ module IncidentManagement
       # based on the actual start time of the shift.
       elapsed_shift_count = elapsed_whole_shifts(starts_at)
       shift_starts_at = shift_start_time(elapsed_shift_count)
+      existing_shifts = persisted_shifts(starts_at, ends_at)
       shifts = []
 
       while shift_starts_at < ends_at
-        shifts << shift_for(elapsed_shift_count, shift_starts_at)
+        shift = shift_for(elapsed_shift_count, shift_starts_at)
+
+        unless exclude_persisted && overlapping_shift?(shift, existing_shifts)
+          shifts << shift
+        end
 
         shift_starts_at += shift_duration
         elapsed_shift_count += 1
@@ -129,6 +134,14 @@ module IncidentManagement
 
     def rotation_starts_at
       @rotation_starts_at ||= apply_timezone(rotation.starts_at)
+    end
+
+    def persisted_shifts(starts_at, ends_at)
+      @persisted_shifts ||= rotation.shifts.for_timeframe(starts_at, ends_at)
+    end
+
+    def overlapping_shift?(new_shift, shifts)
+      shifts.any? { |persisted| persisted.starts_at <= new_shift.ends_at && new_shift.starts_at < persisted.ends_at }
     end
 
     def apply_timezone(timestamp)
