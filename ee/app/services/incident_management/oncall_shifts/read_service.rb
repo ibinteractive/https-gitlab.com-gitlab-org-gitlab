@@ -11,12 +11,13 @@ module IncidentManagement
       # @option params - start_time [Time]
       # @option params - end_time [Time]
       # @option params - include_persisted [Bool]
-      def initialize(rotation, current_user, start_time:, end_time:, include_persisted: true)
+      def initialize(rotation, current_user, start_time:, end_time:, include_persisted: true, skip_user_check: false)
         @rotation = rotation
         @current_user = current_user
         @start_time = start_time
         @end_time = end_time
         @include_persisted = include_persisted
+        @skip_user_check = skip_user_check
       end
 
       def execute
@@ -57,6 +58,8 @@ module IncidentManagement
       end
 
       def allowed?
+        return true if skip_user_check
+
         Ability.allowed?(current_user, :read_incident_management_oncall_schedule, rotation)
       end
 

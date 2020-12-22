@@ -11,10 +11,6 @@ module IncidentManagement
       START_DATE_OFFSET = 6.months
 
       def perform(rotation_id)
-        # For dates up to now (6 months - NOW)
-        # Check if any shifts are un-persisted
-        # Run generate job and persist them
-
         rotation = ::IncidentManagement::OncallRotation.find_by_id(rotation_id)
 
         return unless rotation
@@ -22,24 +18,34 @@ module IncidentManagement
         starts_at = START_DATE_OFFSET.ago
         ends_at = Time.current
 
-        generated_shifts = ::IncidentManagement::OncallShiftGenerator.new(
+        generate_shifts = ::IncidentManagement::OncallShifts::ReadService.new(
           rotation,
+          nil,
           starts_at: starts_at,
-          ends_at: ends_at
+          ends_at: ends_at,
+          include_persisted: false,
+          skip_user_check: true
         ).execute
 
-        existing_shifts = rotation.shifts.for_timeframe(starts_at, ends_at)
+        unless generate_shifts.success?
+          log_error("Could not generate shifts. Error: #{generate_shifts.message}")
+          return
+        end
 
-        shifts_to_persist = exlcude_persited_shifts(generated_shifts, existing_shifts)
+        generated_shifts = generate_shifts.payload[:shifts]
 
-        shifts_to_persist.each(&:save!)
+        IncidentManagement::OncallShift.bulk_insert!(generated_shifts)
       end
 
       private
 
-      def exlcude_persited_shifts(generated_shifts)
-        # TODO find a better way
-        generated_shifts.reject(&:invalid?)
+      def log_error(msg)
+        if Rails.env.production?
+          # TODO
+          Gitlab::AppLogger.warn(msg)
+        else
+          raise msg
+        end
       end
     end
   end

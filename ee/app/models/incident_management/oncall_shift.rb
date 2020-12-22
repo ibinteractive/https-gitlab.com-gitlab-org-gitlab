@@ -2,6 +2,8 @@
 
 module IncidentManagement
   class OncallShift < ApplicationRecord
+    include BulkInsertSafe
+
     self.table_name = 'incident_management_oncall_shifts'
 
     belongs_to :rotation, class_name: 'OncallRotation', inverse_of: :shifts, foreign_key: :rotation_id
