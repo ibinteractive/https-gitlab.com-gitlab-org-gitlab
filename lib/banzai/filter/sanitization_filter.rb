@@ -28,6 +28,9 @@ module Banzai
         allowlist[:attributes]['li'] = %w(id)
         allowlist[:transformers].push(self.class.remove_non_footnote_ids)
 
+        # Allow our custom `gl-literal` element
+        allowlist[:elements].push('gl-literal')
+
         allowlist
       end
 
