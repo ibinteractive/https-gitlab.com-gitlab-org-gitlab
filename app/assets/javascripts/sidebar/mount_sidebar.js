@@ -38,7 +38,7 @@ function mountAssigneesComponent(mediator) {
 
   if (!el) return;
 
-  const { iid, fullPath } = getSidebarOptions();
+  const { iid, fullPath, editable, rootPath } = getSidebarOptions();
   // eslint-disable-next-line no-new
   new Vue({
     el,
@@ -47,8 +47,8 @@ function mountAssigneesComponent(mediator) {
       SidebarAssignees,
     },
     provide: {
-      rootPath: '/',
-      canUpdate: true,
+      rootPath,
+      canUpdate: editable,
     },
     render: (createElement) =>
       createElement('sidebar-assignees', {
