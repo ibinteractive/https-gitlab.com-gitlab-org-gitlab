@@ -18,6 +18,9 @@ export default {
       default: 'issue',
     },
   },
+  mounted() {
+    console.log('CollapsedAssignee', this.user);
+  },
 };
 </script>
 
@@ -26,7 +29,7 @@ export default {
     <assignee-avatar :user="user" :img-size="24" :issuable-type="issuableType" />
     <assignee-name-with-status
       :assignee-name="user.name"
-      :status="user.availability"
+      :availability="user.availability"
       container-classes="author"
     />
   </button>

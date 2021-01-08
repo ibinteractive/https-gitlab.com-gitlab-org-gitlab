@@ -1,4 +1,6 @@
 <script>
+import { isUserBusy } from '~/set_status_modal/utils';
+
 export default {
   name: 'AssigneeNameWithStatus',
   props: {
@@ -11,19 +13,24 @@ export default {
       required: false,
       default: '',
     },
-    status: {
+    availability: {
       type: String,
       required: false,
       default: '',
+    },
+  },
+  computed: {
+    isBusy() {
+      return isUserBusy(this.availability);
     },
   },
 };
 </script>
 <template>
   <span :class="containerClasses">
-    <gl-sprintf v-if="authorIsBusy" :message="s__('UserAvailability|%{author} (Busy)')">
-      <template #author>{{ authorName }}</template>
+    <gl-sprintf v-if="isBusy" :message="s__('UserAvailability|%{name} (Busy)')">
+      <template #name>{{ assigneeName }}</template>
     </gl-sprintf>
-    <template v-else>{{ authorName }}</template>
+    <template v-else>{{ assigneeName }}</template>
   </span>
 </template>
