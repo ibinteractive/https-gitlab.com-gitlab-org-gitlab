@@ -31578,6 +31578,9 @@ msgstr ""
 msgid "VulnerabilityChart|Severity"
 msgstr ""
 
+msgid "VulnerabilityManagement, Fetching linked Jira issues"
+msgstr ""
+
 msgid "VulnerabilityManagement|%{statusStart}Confirmed%{statusEnd} %{timeago} by %{user}"
 msgstr ""
 
@@ -31599,13 +31602,25 @@ msgstr ""
 msgid "VulnerabilityManagement|Could not process %{issueReference}: %{errorMessage}."
 msgstr ""
 
+msgid "VulnerabilityManagement|Create new issue in Jira"
+msgstr ""
+
 msgid "VulnerabilityManagement|Detected"
 msgstr ""
 
 msgid "VulnerabilityManagement|Needs triage"
 msgstr ""
 
+msgid "VulnerabilityManagement|Read more about related issues"
+msgstr ""
+
+msgid "VulnerabilityManagement|Related Jira issues"
+msgstr ""
+
 msgid "VulnerabilityManagement|Something went wrong while trying to delete the comment. Please try again later."
+msgstr ""
+
+msgid "VulnerabilityManagement|Something went wrong while trying to fetch related Jira issues. Please check the %{linkStart}Jira integration settings%{linkEnd} and try again."
 msgstr ""
 
 msgid "VulnerabilityManagement|Something went wrong while trying to refresh the vulnerability. Please try again later."
