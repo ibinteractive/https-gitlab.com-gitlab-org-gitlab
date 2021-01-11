@@ -10,8 +10,7 @@ module IncidentManagement
       queue_namespace :cronjob
 
       def perform
-        # TODO, only loop around currently active rotations?
-        IncidentManagement::OncallRotation.all.pluck(:id).each do |rotation_id| # rubocop: disable CodeReuse/ActiveRecord
+        IncidentManagement::OncallRotation.started.pluck(:id).each do |rotation_id| # rubocop: disable CodeReuse/ActiveRecord
           IncidentManagement::OncallRotations::PersistOncallShiftsJob.perform_async(rotation_id)
         end
       end
