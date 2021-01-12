@@ -15,10 +15,25 @@ module IncidentManagement
 
         return unless rotation
 
+        generated_shifts = generate_shifts(rotation)
+
+        unless generated_shifts.success?
+          log_error("Could not generate shifts. Error: #{generated_shifts.message}")
+          return
+        end
+
+        generated_shifts = generated_shifts.payload[:shifts]
+
+        IncidentManagement::OncallShift.bulk_insert!(generated_shifts)
+      end
+
+      private
+
+      def generate_shifts(rotation)
         starts_at = START_DATE_OFFSET.ago
         ends_at = Time.current
 
-        generate_shifts = ::IncidentManagement::OncallShifts::ReadService.new(
+        ::IncidentManagement::OncallShifts::ReadService.new(
           rotation,
           nil,
           starts_at: starts_at,
@@ -26,26 +41,10 @@ module IncidentManagement
           include_persisted: false,
           skip_user_check: true
         ).execute
-
-        unless generate_shifts.success?
-          log_error("Could not generate shifts. Error: #{generate_shifts.message}")
-          return
-        end
-
-        generated_shifts = generate_shifts.payload[:shifts]
-
-        IncidentManagement::OncallShift.bulk_insert!(generated_shifts)
       end
 
-      private
-
       def log_error(msg)
-        if Rails.env.production?
-          # TODO
-          Gitlab::AppLogger.warn(msg)
-        else
-          raise msg
-        end
+        Gitlab::AppLogger.error(msg)
       end
     end
   end

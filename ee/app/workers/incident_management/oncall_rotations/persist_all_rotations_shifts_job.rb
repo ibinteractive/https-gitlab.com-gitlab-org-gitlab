@@ -11,7 +11,7 @@ module IncidentManagement
 
       def perform
         IncidentManagement::OncallRotation.started.pluck(:id).each do |rotation_id| # rubocop: disable CodeReuse/ActiveRecord
-          IncidentManagement::OncallRotations::PersistOncallShiftsJob.perform_async(rotation_id)
+          IncidentManagement::OncallRotations::PersistShiftsJob.perform_async(rotation_id)
         end
       end
     end

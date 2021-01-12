@@ -38,5 +38,19 @@ RSpec.describe IncidentManagement::OncallRotations::PersistShiftsJob do
         expect { perform }.not_to change { IncidentManagement::OncallShift.count }
       end
     end
+
+    context 'error in generate' do
+      before do
+        allow(worker).to receive(:generate_shifts).with(rotation).and_return(
+          double(success?: false, message: 'Error')
+        )
+      end
+
+      it 'logs the error' do
+        expect(Gitlab::AppLogger).to receive(:error).with('Could not generate shifts. Error: Error')
+
+        perform
+      end
+    end
   end
 end
