@@ -112,6 +112,12 @@ RSpec.describe Projects::IssuesController do
             expect(project.issues.last.vulnerability_links.first.vulnerability).to eq(vulnerability)
           end
 
+          it 'creates vulnerability feedback' do
+            send_request
+
+            expect(project.issues.last).to eq(Vulnerabilities::Feedback.last.issue)
+          end
+
           context 'when vulnerability already has a linked issue' do
             render_views
 
