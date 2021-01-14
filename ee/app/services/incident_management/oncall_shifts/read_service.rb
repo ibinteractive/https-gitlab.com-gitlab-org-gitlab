@@ -26,7 +26,7 @@ module IncidentManagement
         return error_invalid_range unless start_before_end?
         return error_excessive_range unless under_max_timeframe?
 
-        @generated_shifts = generate_shifts
+        @generated_shifts = generate_shifts_and_remove_persisted
 
         if include_persisted
           @generated_shifts = combine_persisted_and_generated_shifts
@@ -41,16 +41,30 @@ module IncidentManagement
 
       attr_reader :rotation, :current_user, :start_time, :end_time, :include_persisted, :skip_user_check, :generated_shifts
 
+      def generate_shifts_and_remove_persisted
+        generated_shifts = generate_shifts
+
+        generated_shifts.reject { |shift| overlapping_shift?(shift, persisted_shifts) }
+      end
+
       def generate_shifts
         ::IncidentManagement::OncallShiftGenerator
           .new(rotation)
-          .for_timeframe(starts_at: start_time, ends_at: end_time, exclude_persisted: true)
+          .for_timeframe(starts_at: start_time, ends_at: end_time)
       end
 
       def combine_persisted_and_generated_shifts
         persisted_shifts = rotation.shifts.for_timeframe(start_time, end_time)
 
         (generated_shifts << persisted_shifts).flatten.sort_by(&:starts_at)
+      end
+
+      def persisted_shifts
+        @persisted_shifts ||= rotation.shifts.for_timeframe(start_time, end_time)
+      end
+
+      def overlapping_shift?(new_shift, shifts)
+        shifts.any? { |persisted| persisted.starts_at < new_shift.ends_at && new_shift.starts_at < persisted.ends_at }
       end
 
       def available?
