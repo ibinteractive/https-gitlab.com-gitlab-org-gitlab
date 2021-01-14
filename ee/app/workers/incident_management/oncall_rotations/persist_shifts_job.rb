@@ -30,15 +30,21 @@ module IncidentManagement
       private
 
       def generate_shifts(rotation)
-        starts_at = START_DATE_OFFSET.ago
-        ends_at = Time.current
+        # To avoid generating shifts in the past, which could lead to inaccurate results,
+        # we get the latest of rotation created time, rotation start time,
+        # or the most recent shift
+        starts_at = [
+          rotation.created_at,
+          rotation.starts_at,
+          rotation.shifts.order_starts_at_desc.first&.starts_at
+        ].compact.max
 
         ::IncidentManagement::OncallShifts::ReadService.new(
           rotation,
           nil,
           starts_at: starts_at,
-          ends_at: ends_at,
-          include_persisted: false,
+          ends_at: Time.current,
+          mode: :future,
           skip_user_check: true
         ).execute
       end

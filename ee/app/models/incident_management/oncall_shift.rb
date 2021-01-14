@@ -19,6 +19,8 @@ module IncidentManagement
       where("tstzrange(starts_at, ends_at, '[)') && tstzrange(?, ?, '[)')", starts_at, ends_at)
     end
 
+    scope :order_starts_at_desc, -> { order(starts_at: :desc) }
+
     private
 
     def timeframes_do_not_overlap

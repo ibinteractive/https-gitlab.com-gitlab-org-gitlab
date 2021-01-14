@@ -10,13 +10,13 @@ module IncidentManagement
       # @param params [Hash<Symbol,Any>]
       # @option params - start_time [Time]
       # @option params - end_time [Time]
-      # @option params - include_persisted [Bool]
-      def initialize(rotation, current_user, start_time:, end_time:, include_persisted: true, skip_user_check: false)
+      # @option params - mode [:combined, :future, :historic]
+      def initialize(rotation, current_user, start_time:, end_time:, mode: :combined, skip_user_check: false)
         @rotation = rotation
         @current_user = current_user
         @start_time = start_time
         @end_time = end_time
-        @include_persisted = include_persisted
+        @mode = mode
         @skip_user_check = skip_user_check
       end
 
@@ -26,28 +26,48 @@ module IncidentManagement
         return error_invalid_range unless start_before_end?
         return error_excessive_range unless under_max_timeframe?
 
-        @generated_shifts = generate_shifts_and_remove_persisted
+        case mode
+        when :combined
+          current_time = Time.current
+          persisted_shifts = rotation.shifts.for_timeframe(start_time, current_time) if current_time >= start_time
+          generated_shifts = generate_shifts(current_time, end_time)
 
-        if include_persisted
-          @generated_shifts = combine_persisted_and_generated_shifts
+          if persisted_shifts.present?
+            last_persisted_shift = persisted_shifts.last
+
+            # Remove duplicate or overlapping shifts
+            # (persisted shift end time > any generated shift start time)
+            generated_shifts.reject! do |generated|
+              last_persisted_shift.ends_at > generated.starts_at ||
+              (generated.starts_at == last_persisted_shift.starts_at && last_persisted_shift.ends_at == generated.ends_at)
+            end
+
+            # join the historical shifts & the generated shifts, removing the duplicate
+            @shifts = persisted_shifts + generated_shifts
+          else
+            @shifts = generated_shifts
+          end
+        when :future
+          @shifts = generate_shifts_and_remove_persisted
+        when :historic
+          @shifts = find_persisted_shifts
         end
 
-        success(
-          generated_shifts
-        )
+        success(shifts)
       end
 
       private
 
-      attr_reader :rotation, :current_user, :start_time, :end_time, :include_persisted, :skip_user_check, :generated_shifts
+      attr_reader :rotation, :current_user, :start_time, :end_time, :mode, :skip_user_check, :shifts
 
       def generate_shifts_and_remove_persisted
-        generated_shifts = generate_shifts
+        generated_shifts = generate_shifts(start_time, end_time)
+        persisted_shifts = find_persisted_shifts
 
         generated_shifts.reject { |shift| overlapping_shift?(shift, persisted_shifts) }
       end
 
-      def generate_shifts
+      def generate_shifts(start_time, end_time)
         ::IncidentManagement::OncallShiftGenerator
           .new(rotation)
           .for_timeframe(starts_at: start_time, ends_at: end_time)
@@ -61,6 +81,10 @@ module IncidentManagement
 
       def persisted_shifts
         @persisted_shifts ||= rotation.shifts.for_timeframe(start_time, end_time)
+      end
+
+      def find_persisted_shifts
+        rotation.shifts.for_timeframe(start_time, end_time)
       end
 
       def overlapping_shift?(new_shift, shifts)

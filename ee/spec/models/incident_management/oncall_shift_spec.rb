@@ -92,6 +92,15 @@ RSpec.describe IncidentManagement::OncallShift do
         # sat_to_sun - Starts as timeframe ends
       end
     end
+
+    describe '.order_starts_at_desc' do
+      subject { described_class.order_starts_at_desc }
+
+      let_it_be(:shift1) { create_shift(Time.current, Time.current + 1.hour, participant) }
+      let_it_be(:shift2) { create_shift(Time.current + 2.hours, Time.current + 3.hours, participant) }
+
+      it { is_expected.to eq [shift2, shift1]}
+    end
   end
 
   private

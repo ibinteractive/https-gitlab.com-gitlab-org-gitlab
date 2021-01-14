@@ -5,7 +5,7 @@ require 'spec_helper'
 RSpec.describe IncidentManagement::OncallRotations::PersistShiftsJob do
   let(:worker) { described_class.new }
 
-  let_it_be(:rotation) { create(:incident_management_oncall_rotation, :with_participant) }
+  let_it_be(:rotation) { create(:incident_management_oncall_rotation, :with_participant, starts_at: 1.day.ago) }
   let(:rotation_id) { rotation.id }
 
   before do
@@ -27,15 +27,30 @@ RSpec.describe IncidentManagement::OncallRotations::PersistShiftsJob do
 
     it 'creates shifts' do
       expect { perform }.to change { rotation.shifts.count }.by(1)
+      expect(rotation.shifts.first.starts_at).to be_within(1.second).of(rotation.starts_at)
     end
 
     context 'shift already created' do
       let_it_be(:existing_shift) do
-        create(:incident_management_oncall_shift, rotation: rotation, participant: rotation.participants.first)
+        create(:incident_management_oncall_shift, rotation: rotation, participant: rotation.participants.first, starts_at: rotation.starts_at + 2.hours)
       end
 
       it 'does not create shifts' do
         expect { perform }.not_to change { IncidentManagement::OncallShift.count }
+      end
+
+      # Simulates a rotation changing from days to hours, which would
+      # result in invalid data being backfilled.
+      # This is avoided by using the latest shift start date
+      # when creating the ReadService
+      context 'rotation duration changed' do
+        before do
+          rotation.update!(length: 1, length_unit: 'hours')
+        end
+
+        it 'does not backfill create shifts' do
+          expect { perform }.not_to change { IncidentManagement::OncallShift.count }
+        end
       end
     end
 
