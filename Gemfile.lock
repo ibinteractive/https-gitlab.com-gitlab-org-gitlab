@@ -405,6 +405,9 @@ GEM
     gemoji (3.0.1)
     gemojione (3.3.0)
       json
+    generator_spec (0.9.4)
+      activesupport (>= 3.0.0)
+      railties (>= 3.0.0)
     get_process_mem (0.2.5)
       ffi (~> 1.0)
     gettext (3.3.6)
@@ -1358,6 +1361,7 @@ DEPENDENCIES
   fugit (~> 1.2.1)
   fuubar (~> 2.2.0)
   gemojione (~> 3.3)
+  generator_spec
   gettext (~> 3.3)
   gettext_i18n_rails (~> 1.8.0)
   gettext_i18n_rails_js (~> 1.3)

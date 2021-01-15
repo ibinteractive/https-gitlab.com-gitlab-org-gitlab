@@ -395,6 +395,7 @@ end
 group :development, :test, :coverage do
   gem 'simplecov', '~> 0.18.5', require: false
   gem 'simplecov-cobertura', '~> 1.3.1', require: false
+  gem 'generator_spec'
 end
 
 # Gems required in omnibus-gitlab pipeline
