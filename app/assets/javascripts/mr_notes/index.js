@@ -7,6 +7,7 @@ import initDiscussionFilters from '../notes/discussion_filters';
 import initSortDiscussions from '../notes/sort_discussions';
 import MergeRequest from '../merge_request';
 import { resetServiceWorkersPublicPath } from '../lib/utils/webpack';
+import initRevertCommitModal from '~/projects/commit/init_revert_commit_modal';
 
 export default function initMrNotes() {
   resetServiceWorkersPublicPath();
@@ -18,6 +19,10 @@ export default function initMrNotes() {
   });
 
   initNotesApp();
+
+  document.addEventListener('merged:UpdateActions', () => {
+    initRevertCommitModal();
+  });
 
   // eslint-disable-next-line no-new
   new Vue({
