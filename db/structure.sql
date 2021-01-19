@@ -13599,8 +13599,24 @@ CREATE TABLE jira_tracker_data (
     deployment_type smallint DEFAULT 0 NOT NULL,
     vulnerabilities_issuetype text,
     vulnerabilities_enabled boolean DEFAULT false NOT NULL,
+    encrypted_proxy_address text,
+    encrypted_proxy_address_iv text,
+    encrypted_proxy_port text,
+    encrypted_proxy_port_iv text,
+    encrypted_proxy_username text,
+    encrypted_proxy_username_iv text,
+    encrypted_proxy_password text,
+    encrypted_proxy_password_iv text,
     CONSTRAINT check_0bf84b76e9 CHECK ((char_length(vulnerabilities_issuetype) <= 255)),
-    CONSTRAINT check_214cf6a48b CHECK ((char_length(project_key) <= 255))
+    CONSTRAINT check_0f391fd894 CHECK ((char_length(encrypted_proxy_password) <= 371)),
+    CONSTRAINT check_20e4d97cdf CHECK ((char_length(encrypted_proxy_username) <= 371)),
+    CONSTRAINT check_214cf6a48b CHECK ((char_length(project_key) <= 255)),
+    CONSTRAINT check_2d054f2839 CHECK ((char_length(encrypted_proxy_port_iv) <= 255)),
+    CONSTRAINT check_4f6d1bc325 CHECK ((char_length(encrypted_proxy_username_iv) <= 255)),
+    CONSTRAINT check_8c074a0372 CHECK ((char_length(encrypted_proxy_address) <= 2798)),
+    CONSTRAINT check_b55d408eb1 CHECK ((char_length(encrypted_proxy_address_iv) <= 255)),
+    CONSTRAINT check_e538edb717 CHECK ((char_length(encrypted_proxy_password_iv) <= 255)),
+    CONSTRAINT check_f22c15a588 CHECK ((char_length(encrypted_proxy_port) <= 29))
 );
 
 CREATE SEQUENCE jira_tracker_data_id_seq
