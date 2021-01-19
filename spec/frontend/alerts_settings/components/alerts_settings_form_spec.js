@@ -12,6 +12,7 @@ import AlertsSettingsForm from '~/alerts_settings/components/alerts_settings_for
 import MappingBuilder from '~/alerts_settings/components/alert_mapping_builder.vue';
 import { defaultAlertSettingsConfig } from './util';
 import { typeSet } from '~/alerts_settings/constants';
+import gitlabAlertFields from '../mocks/gitlabFields.json';
 
 describe('AlertsSettingsFormNew', () => {
   let wrapper;
@@ -33,6 +34,7 @@ describe('AlertsSettingsFormNew', () => {
       },
       provide: {
         glFeatures: { multipleHttpIntegrationsCustomMapping },
+        gitlabAlertFields,
         ...defaultAlertSettingsConfig,
       },
       mocks: {

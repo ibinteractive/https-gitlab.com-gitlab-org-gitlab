@@ -9,10 +9,6 @@ import {
   GlTooltipDirective as GlTooltip,
 } from '@gitlab/ui';
 import { s__, __ } from '~/locale';
-// Mocks will be removed when integrating with BE is ready
-// data format is defined and will be the same as mocked (maybe with some minor changes)
-// feature rollout plan - https://gitlab.com/gitlab-org/gitlab/-/issues/262707#note_442529171
-import gitlabFieldsMock from './mocks/gitlabFields.json';
 import { capitalizeFirstCharacter } from '~/lib/utils/text_utility';
 import {
   getMappingData,
@@ -46,11 +42,7 @@ export default {
   directives: {
     GlTooltip,
   },
-  inject: {
-    gitlabAlertFields: {
-      default: gitlabFieldsMock,
-    },
-  },
+  inject: ['gitlabAlertFields'],
   props: {
     parsedPayload: {
       type: Array,
@@ -74,6 +66,9 @@ export default {
     },
     mappingData() {
       return getMappingData(this.gitlabFields, this.payloadFields, this.savedMapping);
+    },
+    hasFallbackColumn() {
+      return this.gitlabFields.some(({ numberOfFallbacks }) => Boolean(numberOfFallbacks));
     },
   },
   methods: {
@@ -101,10 +96,10 @@ export default {
         this.$options.i18n.makeSelection
       );
     },
-    getFieldValue({ label, type }) {
-      const types = type.map((t) => capitalizeFirstCharacter(t.toLowerCase())).join(__(' or '));
+    getFieldValue({ label, types }) {
+      const type = types.map((t) => capitalizeFirstCharacter(t.toLowerCase())).join(__(' or '));
 
-      return `${label} (${types})`;
+      return `${label} (${type})`;
     },
     noResults(searchTerm, fields) {
       return !this.filterFields(searchTerm, fields).length;
@@ -123,7 +118,11 @@ export default {
       <h5 id="parsedFieldsHeader" class="gl-display-table-cell gl-py-3 gl-pr-3">
         {{ $options.i18n.columns.payloadKeyTitle }}
       </h5>
-      <h5 id="fallbackFieldsHeader" class="gl-display-table-cell gl-py-3 gl-pr-3">
+      <h5
+        v-if="hasFallbackColumn"
+        id="fallbackFieldsHeader"
+        class="gl-display-table-cell gl-py-3 gl-pr-3"
+      >
         {{ $options.i18n.columns.fallbackKeyTitle }}
         <gl-icon
           v-gl-tooltip

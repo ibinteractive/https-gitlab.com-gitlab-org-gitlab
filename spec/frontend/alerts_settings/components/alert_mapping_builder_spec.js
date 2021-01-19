@@ -1,7 +1,7 @@
 import { GlIcon, GlFormInput, GlDropdown, GlSearchBoxByType, GlDropdownItem } from '@gitlab/ui';
 import { shallowMount } from '@vue/test-utils';
 import AlertMappingBuilder, { i18n } from '~/alerts_settings/components/alert_mapping_builder.vue';
-import gitlabFields from '~/alerts_settings/components/mocks/gitlabFields.json';
+import gitlabFields from '../mocks/gitlabFields.json';
 import parsedMapping from '~/alerts_settings/components/mocks/parsedMapping.json';
 import { capitalizeFirstCharacter } from '~/lib/utils/text_utility';
 import * as transformationUtils from '~/alerts_settings/utils/mapping_transformations';
@@ -14,6 +14,9 @@ describe('AlertMappingBuilder', () => {
       propsData: {
         parsedPayload: parsedMapping.samplePayload.payloadAlerFields.nodes,
         savedMapping: parsedMapping.storedMapping.nodes,
+      },
+      provide: {
+        gitlabAlertFields: gitlabFields,
       },
     });
   }
@@ -46,7 +49,7 @@ describe('AlertMappingBuilder', () => {
   it('renders disabled form input for each mapped field', () => {
     gitlabFields.forEach((field, index) => {
       const input = findColumnInRow(index + 1, 0).find(GlFormInput);
-      const types = field.type.map((t) => capitalizeFirstCharacter(t.toLowerCase())).join(' or ');
+      const types = field.types.map((t) => capitalizeFirstCharacter(t.toLowerCase())).join(' or ');
       expect(input.attributes('value')).toBe(`${field.label} (${types})`);
       expect(input.attributes('disabled')).toBe('');
     });
@@ -60,12 +63,12 @@ describe('AlertMappingBuilder', () => {
   });
 
   it('renders mapping dropdown for each field', () => {
-    gitlabFields.forEach(({ compatibleTypes }, index) => {
+    gitlabFields.forEach(({ types }, index) => {
       const dropdown = findColumnInRow(index + 1, 2).find(GlDropdown);
       const searchBox = dropdown.findComponent(GlSearchBoxByType);
       const dropdownItems = dropdown.findAllComponents(GlDropdownItem);
       const { nodes } = parsedMapping.samplePayload.payloadAlerFields;
-      const mappingOptions = nodes.filter(({ type }) => compatibleTypes.includes(type));
+      const mappingOptions = nodes.filter(({ type }) => types.includes(type));
 
       expect(dropdown.exists()).toBe(true);
       expect(searchBox.exists()).toBe(true);
@@ -74,7 +77,7 @@ describe('AlertMappingBuilder', () => {
   });
 
   it('renders fallback dropdown only for the fields that have fallback', () => {
-    gitlabFields.forEach(({ compatibleTypes, numberOfFallbacks }, index) => {
+    gitlabFields.forEach(({ types, numberOfFallbacks }, index) => {
       const dropdown = findColumnInRow(index + 1, 3).find(GlDropdown);
       expect(dropdown.exists()).toBe(Boolean(numberOfFallbacks));
 
@@ -82,7 +85,7 @@ describe('AlertMappingBuilder', () => {
         const searchBox = dropdown.findComponent(GlSearchBoxByType);
         const dropdownItems = dropdown.findAllComponents(GlDropdownItem);
         const { nodes } = parsedMapping.samplePayload.payloadAlerFields;
-        const mappingOptions = nodes.filter(({ type }) => compatibleTypes.includes(type));
+        const mappingOptions = nodes.filter(({ type }) => types.includes(type));
 
         expect(searchBox.exists()).toBe(Boolean(numberOfFallbacks));
         expect(dropdownItems).toHaveLength(mappingOptions.length);
