@@ -29,6 +29,9 @@ describe('GlobalSearchTopbar', () => {
     wrapper = shallowMount(GlobalSearchTopbar, {
       localVue,
       store,
+      propsData: {
+        countPath: 'search/count',
+      },
     });
   };
 

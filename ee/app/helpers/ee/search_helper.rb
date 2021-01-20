@@ -3,8 +3,8 @@ module EE
   module SearchHelper
     extend ::Gitlab::Utils::Override
 
-    SWITCH_TO_BASIC_SEARCHABLE_TABS = %w[projects issues merge_requests milestones users epics].freeze
     PLACEHOLDER = '_PLACEHOLDER_'
+    ADVANCED_SEARCH_TABS = %i{notes blobs commits wiki_blobs}.freeze
 
     override :search_filter_input_options
     def search_filter_input_options(type, placeholder = _('Search or filter results...'))
@@ -114,6 +114,20 @@ module EE
 
       # wrap it inside a `div` for testing purposes
       tag.div(message.html_safe, data: { testid: 'es-status-marker', enabled: enabled })
+    end
+
+    override :search_nav_tabs
+    def search_nav_tabs
+      return super if @project || @show_snippets
+
+      tabs = []
+
+      tabs << :epics if search_service.show_epics?
+      tabs.concat(ADVANCED_SEARCH_TABS) if search_service.use_elasticsearch?
+
+      super_tabs = super
+      users_index = super_tabs.index(:users) || -1
+      super_tabs.insert(users_index, *tabs)
     end
 
     private

@@ -2,7 +2,7 @@
 
 require 'spec_helper'
 
-RSpec.describe 'User searches for code' do
+RSpec.describe 'User searches for code', :js do
   let(:user) { create(:user) }
   let(:project) { create(:project, :repository, namespace: user.namespace) }
 
@@ -16,6 +16,7 @@ RSpec.describe 'User searches for code' do
       visit(project_path(project))
 
       submit_search('application.js')
+
       select_search_scope('Code')
 
       expect(page).to have_selector('.results', text: 'application.js')
@@ -24,7 +25,7 @@ RSpec.describe 'User searches for code' do
       expect(page).to have_link('application.js', href: /master\/files\/js\/application.js/)
     end
 
-    context 'when on a project page', :js do
+    context 'when on a project page' do
       before do
         visit(search_path)
         find('[data-testid="project-filter"]').click
@@ -67,7 +68,7 @@ RSpec.describe 'User searches for code' do
       end
     end
 
-    context 'search code within refs', :js do
+    context 'search code within refs' do
       let(:ref_name) { 'v1.0.0' }
 
       before do

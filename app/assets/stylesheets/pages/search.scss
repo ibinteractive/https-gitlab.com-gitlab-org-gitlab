@@ -2,6 +2,7 @@ $search-dropdown-max-height: 400px;
 $search-avatar-size: 16px;
 $search-sidebar-min-width: 240px;
 $search-sidebar-max-width: 300px;
+$search-topbar-min-height: 100px;
 
 .search-results {
   .search-result-row {
@@ -16,6 +17,12 @@ $search-sidebar-max-width: 300px;
 
   .blob-result {
     margin: 5px 0;
+  }
+}
+
+.search-topbar {
+  @include media-breakpoint-up(md) {
+    min-height: $search-topbar-min-height;
   }
 }
 

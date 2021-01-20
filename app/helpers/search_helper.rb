@@ -1,16 +1,8 @@
 # frozen_string_literal: true
 
 module SearchHelper
-  SEARCH_GENERIC_PARAMS = [
-    :search,
-    :scope,
-    :project_id,
-    :group_id,
-    :repository_ref,
-    :snippets,
-    :sort,
-    :force_search_results
-  ].freeze
+  PROJECT_SEARCH_TABS = %i{blobs issues merge_requests milestones notes wiki_blobs commits}.freeze
+  BASIC_SEARCH_TABS = %i{projects issues merge_requests milestones}.freeze
 
   def search_autocomplete_opts(term)
     return unless current_user
@@ -271,27 +263,21 @@ module SearchHelper
     Sanitize.clean(str)
   end
 
-  def search_filter_link(scope, label, data: {}, search: {})
-    search_params = params
-      .merge(search)
-      .merge({ scope: scope })
-      .permit(SEARCH_GENERIC_PARAMS)
+  def search_nav_tabs
+    tabs = []
 
-    if @scope == scope
-      li_class = 'active'
-      count = @search_results.formatted_count(scope)
-    else
-      badge_class = 'js-search-count hidden'
-      badge_data = { url: search_count_path(search_params) }
-    end
-
-    content_tag :li, class: li_class, data: data do
-      link_to search_path(search_params) do
-        concat label
-        concat ' '
-        concat content_tag(:span, count, class: ['badge badge-pill', badge_class], data: badge_data)
+    if @project
+      tabs = PROJECT_SEARCH_TABS.select do |tab|
+        project_search_tabs?(tab)
       end
+    elsif @show_snippets
+      return [:snippet_titles]
+    else
+      tabs.concat(BASIC_SEARCH_TABS)
     end
+
+    tabs << :users if show_user_search_tab?
+    tabs
   end
 
   def search_filter_input_options(type, placeholder = _('Search or filter results...'))
