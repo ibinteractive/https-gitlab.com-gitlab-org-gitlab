@@ -3,8 +3,6 @@
 require 'spec_helper'
 
 RSpec.describe Banzai::Pipeline::FullPipeline do
-  using RSpec::Parameterized::TableSyntax
-
   describe 'References' do
     let(:project) { create(:project, :public) }
     let(:issue)   { create(:issue, project: project) }

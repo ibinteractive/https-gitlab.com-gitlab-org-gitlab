@@ -60,7 +60,7 @@ RSpec.describe Banzai::Pipeline::PlainMarkdownPipeline do
       end
 
       it 'backslash at the end of the line is a hard line break' do
-        markdown = <<-MARKDOWN.strip_heredoc
+        markdown = <<~MARKDOWN
           foo\\
           bar
         MARKDOWN
@@ -85,9 +85,9 @@ RSpec.describe Banzai::Pipeline::PlainMarkdownPipeline do
 
       describe 'work in all other contexts, including URLs and link titles, link references, and info strings in fenced code blocks' do
         where(:markdown, :expected) do
-          %q![foo](/bar\* "ti\*tle")!          | %q(<a href="/bar*" title="ti*tle">foo</a>)
-          %Q![foo]\n\n[foo]: /bar\* "ti\*tle"! | %q(<a href="/bar*" title="ti*tle">foo</a>)
-          %Q(``` foo\+bar\nfoo\n```)           | %Q(<code lang="foo+bar">foo\n</code>)
+          %q![foo](/bar\* "ti\*tle")!            | %q(<a href="/bar*" title="ti*tle">foo</a>)
+          %Q![foo]\n\n[foo]: /bar\\* "ti\\*tle"! | %q(<a href="/bar*" title="ti*tle">foo</a>)
+          %Q(``` foo\\+bar\nfoo\n```)            | %Q(<code lang="foo+bar">foo\n</code>)
         end
 
         with_them do

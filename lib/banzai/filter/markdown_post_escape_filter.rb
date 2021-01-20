@@ -27,6 +27,10 @@ module Banzai
           node.attributes['title'].value = node.attributes['title'].value.gsub(SPAN_REGEX, '\1') if node.attributes['title']
         end
 
+        doc.css('code').each do |node|
+          node.attributes['lang'].value  = node.attributes['lang'].value.gsub(SPAN_REGEX, '\1') if node.attributes['lang']
+        end
+
         doc
       end
     end
