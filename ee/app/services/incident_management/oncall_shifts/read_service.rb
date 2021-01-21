@@ -38,8 +38,7 @@ module IncidentManagement
             # Remove duplicate or overlapping shifts
             # (persisted shift end time > any generated shift start time)
             generated_shifts.reject! do |generated|
-              last_persisted_shift.ends_at > generated.starts_at ||
-              (generated.starts_at == last_persisted_shift.starts_at && last_persisted_shift.ends_at == generated.ends_at)
+              last_persisted_shift.ends_at > generated.starts_at || overlapping_shift?(generated, last_persisted_shift)
             end
 
             # join the historical shifts & the generated shifts, removing the duplicate
@@ -50,7 +49,7 @@ module IncidentManagement
         when :future
           @shifts = generate_shifts_and_remove_persisted
         when :historic
-          @shifts = find_persisted_shifts
+          @shifts = find_persisted_shifts(start_time, end_time)
         end
 
         success(shifts)
@@ -62,9 +61,9 @@ module IncidentManagement
 
       def generate_shifts_and_remove_persisted
         generated_shifts = generate_shifts(start_time, end_time)
-        persisted_shifts = find_persisted_shifts
+        persisted_shifts = find_persisted_shifts(start_time, end_time)
 
-        generated_shifts.reject { |shift| overlapping_shift?(shift, persisted_shifts) }
+        generated_shifts.reject { |shift| overlapping_shifts?(shift, persisted_shifts) }
       end
 
       def generate_shifts(start_time, end_time)
@@ -79,16 +78,16 @@ module IncidentManagement
         (generated_shifts << persisted_shifts).flatten.sort_by(&:starts_at)
       end
 
-      def persisted_shifts
-        @persisted_shifts ||= rotation.shifts.for_timeframe(start_time, end_time)
+      def find_persisted_shifts(start_at, end_at)
+        rotation.shifts.for_timeframe(start_at, end_time)
       end
 
-      def find_persisted_shifts
-        rotation.shifts.for_timeframe(start_time, end_time)
+      def overlapping_shifts?(new_shift, shifts)
+        shifts.any? { |persisted| overlapping_shift?(new_shift, persisted) }
       end
 
-      def overlapping_shift?(new_shift, shifts)
-        shifts.any? { |persisted| persisted.starts_at < new_shift.ends_at && new_shift.starts_at < persisted.ends_at }
+      def overlapping_shift?(new_shift, other_shift)
+        other_shift.starts_at < new_shift.ends_at && new_shift.starts_at < other_shift.ends_at
       end
 
       def available?

@@ -8,8 +8,6 @@ module IncidentManagement
       idempotent!
       feature_category :incident_management
 
-      START_DATE_OFFSET = 6.months
-
       def perform(rotation_id)
         rotation = ::IncidentManagement::OncallRotation.find_by_id(rotation_id)
 
@@ -30,9 +28,9 @@ module IncidentManagement
       private
 
       def generate_shifts(rotation)
-        # To avoid generating shifts in the past, which could lead to inaccurate results,
+        # To avoid generating shifts in the past, which could lead to unnecessary processing,
         # we get the latest of rotation created time, rotation start time,
-        # or the most recent shift
+        # or the most recent shift.
         starts_at = [
           rotation.created_at,
           rotation.starts_at,
