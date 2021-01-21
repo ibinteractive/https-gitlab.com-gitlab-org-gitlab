@@ -40,13 +40,10 @@ RSpec.describe ProjectCiCdSetting do
   end
 
   describe '#keep_latest_artifact_enabled?' do
-    let(:settings) { ProjectCiCdSetting.new }
+    let(:attrs) { { keep_latest_artifact: project_enabled } }
+    let(:project_settings) { described_class.new(attrs) }
 
-    subject { settings.keep_latest_artifact_enabled? }
-
-    before do
-      allow(settings).to receive(:keep_latest_artifact).and_return(project_enabled)
-    end
+    subject { project_settings.keep_latest_artifact_enabled? }
 
     context 'with application setting null' do
       where(:project_enabled, :result_keep_latest_artifact) do
@@ -68,7 +65,7 @@ RSpec.describe ProjectCiCdSetting do
       end
 
       before do
-        ApplicationSetting.find_or_create_without_cache.update!(keep_latest_artifact: instance_enabled)
+        ApplicationSetting.create!(keep_latest_artifact: instance_enabled)
       end
 
       with_them do

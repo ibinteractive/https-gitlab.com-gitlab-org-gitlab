@@ -22,8 +22,9 @@ class ProjectCiCdSetting < ApplicationRecord
   end
 
   def keep_latest_artifact_enabled?
-    # The project level feature set can only be enabled when the feature is enabled instance wide
-    ApplicationSetting.find_or_create_without_cache.keep_latest_artifact? && keep_latest_artifact
+    # The project level feature can only be enabled when the feature is enabled instance wide
+    application_settings = ApplicationSetting.current || ApplicationSetting.create_from_defaults
+    application_settings.keep_latest_artifact? && keep_latest_artifact
   end
 
   private
