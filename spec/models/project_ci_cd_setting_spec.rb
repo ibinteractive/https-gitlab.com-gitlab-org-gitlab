@@ -3,6 +3,8 @@
 require 'spec_helper'
 
 RSpec.describe ProjectCiCdSetting do
+  using RSpec::Parameterized::TableSyntax
+
   describe 'validations' do
     it 'validates default_git_depth is between 0 and 1000 or nil' do
       expect(subject).to validate_numericality_of(:default_git_depth)
@@ -34,6 +36,44 @@ RSpec.describe ProjectCiCdSetting do
       project.save!
 
       expect(project.reload.ci_cd_settings.default_git_depth).to eq(0)
+    end
+  end
+
+  describe '#keep_latest_artifact_enabled?' do
+    let(:settings) { ProjectCiCdSetting.new }
+
+    subject { settings.keep_latest_artifact_enabled? }
+
+    before do
+      allow(settings).to receive(:keep_latest_artifact).and_return(project_enabled)
+    end
+
+    context 'with application setting null' do
+      where(:project_enabled, :result_keep_latest_artifact) do
+        false        | false
+        true         | true
+      end
+
+      with_them do
+        it { expect(subject).to eq(result_keep_latest_artifact) }
+      end
+    end
+
+    context 'with application setting not null' do
+      where(:instance_enabled, :project_enabled, :result_keep_latest_artifact) do
+        false         | false        | false
+        false         | true         | false
+        true          | false        | false
+        true          | true         | true
+      end
+
+      before do
+        ApplicationSetting.find_or_create_without_cache.update!(keep_latest_artifact: instance_enabled)
+      end
+
+      with_them do
+        it { expect(subject).to eq(result_keep_latest_artifact) }
+      end
     end
   end
 end

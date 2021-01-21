@@ -21,6 +21,11 @@ class ProjectCiCdSetting < ApplicationRecord
     super && ::Feature.enabled?(:forward_deployment_enabled, project, default_enabled: true)
   end
 
+  def keep_latest_artifact_enabled?
+    # The project level feature set can only be enabled when the feature is enabled instance wide
+    ApplicationSetting.find_or_create_without_cache.keep_latest_artifact? && keep_latest_artifact
+  end
+
   private
 
   def set_default_git_depth

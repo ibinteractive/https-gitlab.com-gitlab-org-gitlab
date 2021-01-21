@@ -410,7 +410,7 @@ class Project < ApplicationRecord
   delegate :dashboard_timezone, to: :metrics_setting, allow_nil: true, prefix: true
   delegate :default_git_depth, :default_git_depth=, to: :ci_cd_settings, prefix: :ci
   delegate :forward_deployment_enabled, :forward_deployment_enabled=, :forward_deployment_enabled?, to: :ci_cd_settings, prefix: :ci
-  delegate :keep_latest_artifact, :keep_latest_artifact=, :keep_latest_artifact?, to: :ci_cd_settings, prefix: :ci
+  delegate :keep_latest_artifact, :keep_latest_artifact=, :keep_latest_artifact_enabled?, to: :ci_cd_settings, prefix: :ci
   delegate :restrict_user_defined_variables, :restrict_user_defined_variables=, :restrict_user_defined_variables?,
     to: :ci_cd_settings
   delegate :actual_limits, :actual_plan_name, to: :namespace, allow_nil: true
@@ -837,7 +837,11 @@ class Project < ApplicationRecord
   end
 
   def latest_pipeline_locked
-    ci_keep_latest_artifact? ? :artifacts_locked : :unlocked
+    if ci_keep_latest_artifact_enabled?
+      return :artifacts_locked
+    end
+
+    :unlocked
   end
 
   def autoclose_referenced_issues

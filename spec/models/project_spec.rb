@@ -558,6 +558,25 @@ RSpec.describe Project, factory_default: :keep do
     end
   end
 
+  describe '#latest_pipeline_locked' do
+    let(:project) { build_stubbed(:project) }
+
+    subject { project.latest_pipeline_locked }
+
+    where(:ci_keep_latest_artifact_enabled, :result_pipeline_locked) do
+      false        | :unlocked
+      true         | :artifacts_locked
+    end
+
+    before do
+      allow(project).to receive(:ci_keep_latest_artifact_enabled?).and_return(ci_keep_latest_artifact_enabled)
+    end
+
+    with_them do
+      it { expect(subject).to eq(result_pipeline_locked) }
+    end
+  end
+
   describe '#autoclose_referenced_issues' do
     context 'when DB entry is nil' do
       let(:project) { build(:project, autoclose_referenced_issues: nil) }
