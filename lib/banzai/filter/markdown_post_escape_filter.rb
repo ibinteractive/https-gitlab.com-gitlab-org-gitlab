@@ -4,9 +4,9 @@ module Banzai
   module Filter
     class MarkdownPostEscapeFilter < HTML::Pipeline::Filter
       LITERAL_KEYWORD   = MarkdownPreEscapeFilter::LITERAL_KEYWORD
-      LITERAL_REGEX     = Regexp.new("#{LITERAL_KEYWORD}-(.*?)-#{LITERAL_KEYWORD}").freeze
-      NOT_LITERAL_REGEX = Regexp.new("#{LITERAL_KEYWORD}-((%5C|\\\\).+?)-#{LITERAL_KEYWORD}").freeze
-      SPAN_REGEX        = /<span>(.*?)<\/span>/.freeze
+      LITERAL_REGEX     = %r{#{LITERAL_KEYWORD}-(.*?)-#{LITERAL_KEYWORD}}.freeze
+      NOT_LITERAL_REGEX = %r{#{LITERAL_KEYWORD}-((%5C|\\).+?)-#{LITERAL_KEYWORD}}.freeze
+      SPAN_REGEX        = %r{<span>(.*?)</span>}.freeze
 
       def call
         # For any literals that actually didn't get escape processed

@@ -24,7 +24,7 @@ module Banzai
     # This filter does the initial surrounding, and MarkdownPostEscapeFilter
     # does the conversion into span tags.
     class MarkdownPreEscapeFilter < HTML::Pipeline::TextFilter
-      ASCII_PUNCTUATION   = /([\\][!"#$%&'()*+,-.\/:;<=>?@\[\\\]^_`{|}~])/.freeze
+      ASCII_PUNCTUATION   = %r{([\\][!"#$%&'()*+,-./:;<=>?@\[\\\]^_`{|}~])}.freeze
       LITERAL_KEYWORD     = 'cmliteral'
       LITERAL_PLACEHOLDER = "#{LITERAL_KEYWORD}-\\1-#{LITERAL_KEYWORD}".freeze
 
