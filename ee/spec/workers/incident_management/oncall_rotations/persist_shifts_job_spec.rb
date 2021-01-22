@@ -56,7 +56,7 @@ RSpec.describe IncidentManagement::OncallRotations::PersistShiftsJob do
 
     context 'error in generate' do
       before do
-        allow(worker).to receive(:generate_shifts).with(rotation).and_return(
+        allow(worker).to receive(:generate_shifts).and_return(
           double(success?: false, message: 'Error')
         )
       end

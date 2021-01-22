@@ -37,15 +37,10 @@ module IncidentManagement
 
             # Remove duplicate or overlapping shifts
             # (persisted shift end time > any generated shift start time)
-            generated_shifts.reject! do |generated|
-              last_persisted_shift.ends_at > generated.starts_at || overlapping_shift?(generated, last_persisted_shift)
-            end
-
-            # join the historical shifts & the generated shifts, removing the duplicate
-            @shifts = persisted_shifts + generated_shifts
-          else
-            @shifts = generated_shifts
+            generated_shifts.reject! { |generated_shift| last_persisted_shift.ends_at > generated_shift.starts_at }
           end
+
+          @shifts = Array(persisted_shifts) + generated_shifts
         when :future
           @shifts = generate_shifts_and_remove_persisted
         when :historic
@@ -72,14 +67,8 @@ module IncidentManagement
           .for_timeframe(starts_at: start_time, ends_at: end_time)
       end
 
-      def combine_persisted_and_generated_shifts
-        persisted_shifts = rotation.shifts.for_timeframe(start_time, end_time)
-
-        (generated_shifts << persisted_shifts).flatten.sort_by(&:starts_at)
-      end
-
       def find_persisted_shifts(start_at, end_at)
-        rotation.shifts.for_timeframe(start_at, end_time)
+        rotation.shifts.for_timeframe(start_at, end_time).order_starts_at_desc
       end
 
       def overlapping_shifts?(new_shift, shifts)
