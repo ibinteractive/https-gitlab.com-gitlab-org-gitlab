@@ -40,8 +40,8 @@ module IncidentManagement
         ::IncidentManagement::OncallShifts::ReadService.new(
           rotation,
           nil,
-          starts_at: starts_at,
-          ends_at: Time.current,
+          start_time: starts_at,
+          end_time: Time.current,
           mode: :future,
           skip_user_check: true
         ).execute
