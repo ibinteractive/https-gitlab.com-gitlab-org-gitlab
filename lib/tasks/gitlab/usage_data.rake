@@ -142,6 +142,7 @@ namespace :gitlab do
           'data_source'  => usage_ping_metric.data_source,
           'distribution' => [],
           'tier'         => [],
+          'skip_validation' => true
         }
 
         tier = []
