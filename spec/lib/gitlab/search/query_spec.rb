@@ -46,4 +46,13 @@ RSpec.describe Gitlab::Search::Query do
       expect(subject.filters).to all(include(negated: true))
     end
   end
+
+  context 'with filter value in quotes' do
+    let(:query) { 'some foo name:"my test.txt"' }
+
+    it 'finds the whole value in quotes' do
+      expect(subject.term).to eq('some foo')
+      expect(subject.filters[0]).to match(a_hash_including(name: :name, negated: false, value: "MY TEST.TXT"))
+    end
+  end
 end
