@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-class CopyIssuesServiceDeskReplyToToIssueEmailParticipants < ActiveRecord::Migration[6.0]
+class SchedulePopulateIssueEmailParticipants < ActiveRecord::Migration[6.0]
   include Gitlab::Database::MigrationHelpers
 
   DOWNTIME = false
   BATCH_SIZE = 100_000
   DELAY_INTERVAL = 2.minutes
-  MIGRATION = Gitlab::BackgroundMigration::PopulateIssueEmailParticipants
+  MIGRATION = 'PopulateIssueEmailParticipants'
   MIGRATION_NAME = MIGRATION.to_s.demodulize
 
   disable_ddl_transaction!
