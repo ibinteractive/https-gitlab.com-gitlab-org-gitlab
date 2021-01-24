@@ -24,6 +24,12 @@ export default {
     };
   },
 
+  computed: {
+    show() {
+      return !isEmpty(this.html);
+    },
+  },
+
   watch: {
     html() {
       this.appendRecaptchaScript();
@@ -40,11 +46,6 @@ export default {
 
   beforeDestroy() {
     eventHub.$off('submit', this.submit);
-  },
-  computed: {
-    show() {
-      return !isEmpty(this.html);
-    },
   },
   methods: {
     appendRecaptchaScript() {
