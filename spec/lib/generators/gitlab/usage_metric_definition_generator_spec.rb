@@ -10,12 +10,15 @@ RSpec.describe Gitlab::UsageMetricDefinitionGenerator, :rails, type: :generator 
   teardown :prepare_destination
 
   context 'with invalid options' do
-    where(:args, :error) do
-      %w(metric.foo.bar --unknown-option) | /dir option is required/
-      %w(metric.foo.bar --dir= --ee)      | /dir option is required/
-      %w(metric.foo.bar --dir=7w)         | /Invalid dir 7w, allowed options are counts_7d, 7d, counts_28d, 28d, counts_all, all, settings, license/
-      %w(metric.foo.bar --dir=7w --ee)    | /Invalid dir 7w, allowed options are counts_7d, 7d, counts_28d, 28d, counts_all, all, settings, license/
+    where(:dir, :error) do
+      %w(--unknown-option) | /dir option is required/
+      %w(--dir= --ee)      | /dir option is required/
+      %w(--dir=7w)         | /Invalid dir 7w, allowed options are counts_7d, 7d, counts_28d, 28d, counts_all, all, settings, license/
+      %w(--dir=7w --ee)    | /Invalid dir 7w, allowed options are counts_7d, 7d, counts_28d, 28d, counts_all, all, settings, license/
+      %w(--dir=none)       | /Invalid dir none, allowed options are counts_7d, 7d, counts_28d, 28d, counts_all, all, settings, license/
     end
+
+    let(:args) { ['metric.foo.bar'] + dir }
 
     with_them do
       it 'raise an error' do
@@ -37,19 +40,19 @@ RSpec.describe Gitlab::UsageMetricDefinitionGenerator, :rails, type: :generator 
   end
 
   context 'with valid options' do
-    where(:args, :directory, :expected_time_frame) do
-      %w(metric.foo.bar --dir=settings)   | 'settings'   | 'none'
-      %w(metric.foo.bar --dir=license)    | 'license'    | 'none'
-      %w(metric.foo.bar --dir=7d)         | 'counts_7d'  | '7d'
-      %w(metric.foo.bar --dir=counts_7d)  | 'counts_7d'  | '7d'
-      %w(metric.foo.bar --dir=28d)        | 'counts_28d' | '28d'
-      %w(metric.foo.bar --dir=counts_28d) | 'counts_28d' | '28d'
-      %w(metric.foo.bar --dir=all)        | 'counts_all' | 'all'
-      %w(metric.foo.bar --dir=al)         | 'counts_all' | 'all'
+    where(:dir, :directory, :expected_time_frame) do
+      '--dir=settings'    | 'settings'   | 'none'
+      '--dir=license'     | 'license'    | 'none'
+      '--dir=7d'          | 'counts_7d'  | '7d'
+      '--dir=counts_7d'   | 'counts_7d'  | '7d'
+      '--dir=28d'         | 'counts_28d' | '28d'
+      '--dir=counts_28d'  | 'counts_28d' | '28d'
+      '--dir=all'         | 'counts_all' | 'all'
     end
 
     let(:key_path) { args.first }
     let(:file_name) { key_path.split('.').last }
+    let(:args) { ['metric.foo.bar', dir] }
 
     with_them do
       shared_examples 'correct metric definition' do |distribution, extra_args, parent_dir|

@@ -4,21 +4,21 @@ require 'rails/generators'
 
 module Gitlab
   class UsageMetricDefinitionGenerator < Rails::Generators::Base
-    Directory = Struct.new(:name, :time_frame, :regex) do
+    Directory = Struct.new(:name, :time_frame) do
       def match?(str)
-        name == str || time_frame == str || str.match?(regex)
+        (name == str || time_frame == str) && str != 'none'
       end
     end
 
     TIME_FRAME_DIRS = [
-      Directory.new('counts_7d',  '7d',   %r{\A(counts_7d)|(7d)|(count_7d)\z}),
-      Directory.new('counts_28d', '28d',  %r{\A(counts_28d)|(28d)|(count_28d)\z}),
-      Directory.new('counts_all', 'all',  %r{\A(counts_all)|(all)|(al)\z}),
-      Directory.new('settings',   'none', %r{\A(settings)|(setting)|(seting)(settin)\z}),
-      Directory.new('license',    'none', %r{\A(license)|(licence)|(licese)\z})
+      Directory.new('counts_7d',  '7d'),
+      Directory.new('counts_28d', '28d'),
+      Directory.new('counts_all', 'all'),
+      Directory.new('settings',   'none'),
+      Directory.new('license',    'none')
     ].freeze
 
-    VALID_INPUT_DIRS = TIME_FRAME_DIRS.flat_map { |d| [d.name, d.time_frame] } - %w(none)
+    VALID_INPUT_DIRS = (TIME_FRAME_DIRS.flat_map { |d| [d.name, d.time_frame] } - %w(none)).freeze
 
     source_root File.expand_path('../../../generator_templates/usage_metric_definition', __dir__)
 
