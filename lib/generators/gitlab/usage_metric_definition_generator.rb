@@ -4,20 +4,29 @@ require 'rails/generators'
 
 module Gitlab
   class UsageMetricDefinitionGenerator < Rails::Generators::Base
-    VALID_OPTIONS = {
-      'counts_7d'  => { 'regexp' => %r{(counts_7d)|(7d)|(count_7d)},           'time_frame' => '7d' },
-      'counts_28d' => { 'regexp' => %r{(counts_28d)|(28d)|(count_28d)},        'time_frame' => '28d' },
-      'counts_all' => { 'regexp' => %r{(counts_all)|(all)|(al)},               'time_frame' => 'all' },
-      'settings'   => { 'regexp' => %r{(settings)|(setting)|(seting)(settin)}, 'time_frame' => 'none' },
-      'license'    => { 'regexp' => %r{(license)|(licence)|(licese)},          'time_frame' => 'none' }
-    }.freeze
+    Directory = Struct.new(:name, :time_frame, :regex) do
+      def match?(str)
+        name == str || time_frame == str || str.match?(regex)
+      end
+    end
+
+    TIME_FRAME_DIRS = [
+      Directory.new('counts_7d',  '7d',   %r{\A(counts_7d)|(7d)|(count_7d)\z}),
+      Directory.new('counts_28d', '28d',  %r{\A(counts_28d)|(28d)|(count_28d)\z}),
+      Directory.new('counts_all', 'all',  %r{\A(counts_all)|(all)|(al)\z}),
+      Directory.new('settings',   'none', %r{\A(settings)|(setting)|(seting)(settin)\z}),
+      Directory.new('license',    'none', %r{\A(license)|(licence)|(licese)\z})
+    ].freeze
+
+    VALID_INPUT_DIRS = TIME_FRAME_DIRS.flat_map { |d| [d.name, d.time_frame] } - %w(none)
 
     source_root File.expand_path('../../../generator_templates/usage_metric_definition', __dir__)
 
     desc 'Generates a metric definition yml file'
 
     class_option :ee, type: :boolean, optional: true, default: false, desc: 'Indicates if metric is for ee'
-    class_option :dir, type: :string, desc: "Indicates the metric location. It must be one of: #{VALID_OPTIONS.keys.map(&:inspect).join(', ')}"
+    class_option :dir,
+      type: :string, desc: "Indicates the metric location. It must be one of: #{VALID_INPUT_DIRS.join(', ')}"
 
     argument :key_path, type: :string, desc: 'Unique JSON key path for the metric'
 
@@ -28,7 +37,7 @@ module Gitlab
     end
 
     def time_frame
-      VALID_OPTIONS[directory]['time_frame']
+      directory&.time_frame
     end
 
     def distribution
@@ -40,14 +49,14 @@ module Gitlab
     private
 
     def file_path
-      path = File.join('config', 'metrics', directory, "#{file_name}.yml")
+      path = File.join('config', 'metrics', directory&.name, "#{file_name}.yml")
       path = File.join('ee', path) if ee?
       path
     end
 
     def validate!
       raise "--dir option is required" unless input_dir.present?
-      raise "Invalid dir #{input_dir}, allowed options are #{VALID_OPTIONS.keys.join(', ')}" unless directory.present?
+      raise "Invalid dir #{input_dir}, allowed options are #{VALID_INPUT_DIRS.join(', ')}" unless directory.present?
     end
 
     def ee?
@@ -63,8 +72,7 @@ module Gitlab
     end
 
     def directory
-      dir, _ = VALID_OPTIONS.find { |_, options| options['regexp'].match?(input_dir) }
-      dir
+      @directory ||= TIME_FRAME_DIRS.find { |d| d.match?(input_dir) }
     end
   end
 end

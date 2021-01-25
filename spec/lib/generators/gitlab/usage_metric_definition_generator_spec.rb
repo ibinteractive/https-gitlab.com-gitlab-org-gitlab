@@ -13,8 +13,8 @@ RSpec.describe Gitlab::UsageMetricDefinitionGenerator, :rails, type: :generator 
     where(:args, :error) do
       %w(metric.foo.bar --unknown-option) | /dir option is required/
       %w(metric.foo.bar --dir= --ee)      | /dir option is required/
-      %w(metric.foo.bar --dir=7w)         | /Invalid dir 7w, allowed options are counts_7d, counts_28d, counts_all, settings, license/
-      %w(metric.foo.bar --dir=7w --ee)    | /Invalid dir 7w, allowed options are counts_7d, counts_28d, counts_all, settings, license/
+      %w(metric.foo.bar --dir=7w)         | /Invalid dir 7w, allowed options are counts_7d, 7d, counts_28d, 28d, counts_all, all, settings, license/
+      %w(metric.foo.bar --dir=7w --ee)    | /Invalid dir 7w, allowed options are counts_7d, 7d, counts_28d, 28d, counts_all, all, settings, license/
     end
 
     with_them do
