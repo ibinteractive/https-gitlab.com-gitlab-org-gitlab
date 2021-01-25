@@ -66,6 +66,17 @@ RSpec.describe GraphqlController do
 
         expect(assigns(:context)[:is_sessionless_user]).to be false
       end
+
+      context 'when the request has a vs_code user agent' do
+        it 'tracks the usage' do
+          request.env['HTTP_USER_AGENT'] = 'vs-code-gitlab-workflow/3.11.1 VSCode/1.52.1 Node.js/12.14.1 (darwin; x64)'
+
+          expect(Gitlab::UsageDataCounters::VSCodeExtensionActivityUniqueCounter)
+            .to receive(:track_vs_code_api_request).with(user: user)
+
+          post :execute
+        end
+      end
     end
 
     context 'when user uses an API token' do
@@ -82,6 +93,17 @@ RSpec.describe GraphqlController do
         subject
 
         expect(assigns(:context)[:is_sessionless_user]).to be true
+      end
+
+      context 'when the request has a vs_code user agent' do
+        it 'tracks the usage' do
+          request.env['HTTP_USER_AGENT'] = 'vs-code-gitlab-workflow/3.11.1 VSCode/1.52.1 Node.js/12.14.1 (darwin; x64)'
+
+          expect(Gitlab::UsageDataCounters::VSCodeExtensionActivityUniqueCounter)
+            .to receive(:track_vs_code_api_request).with(user: user)
+
+          subject
+        end
       end
     end
 
