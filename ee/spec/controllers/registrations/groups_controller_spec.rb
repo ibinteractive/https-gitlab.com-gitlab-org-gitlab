@@ -100,9 +100,6 @@ RSpec.describe Registrations::GroupsController do
         expect { subject }.to change { Group.count }.by(1)
       end
 
-      it { is_expected.to have_gitlab_http_status(:redirect) }
-      it { is_expected.to redirect_to(new_users_sign_up_project_path(namespace_id: user.groups.last.id, trial: false)) }
-
       it 'calls the record user trial_during_signup experiment' do
         group = create(:group)
         expect_next_instance_of(Groups::CreateService) do |service|
@@ -111,6 +108,22 @@ RSpec.describe Registrations::GroupsController do
         expect(controller).to receive(:record_experiment_user).with(:trial_during_signup, trial_chosen: false, namespace_id: group.id)
 
         subject
+      end
+
+      context 'when registration_group_invite experiment is enabled' do
+        it { is_expected.to redirect_to(new_users_sign_up_group_invite_path(group_id: user.groups.last.id, trial: false)) }
+        # verify tracking here?
+      end
+
+      context 'when registration_group_invite experiment is disabled' do
+        before do
+          stub_feature_flags(registration_group_invite: false)
+        end
+
+        it { is_expected.to redirect_to(new_users_sign_up_project_path(namespace_id: user.groups.last.id, trial: false)) }
+
+        it_behaves_like GroupInviteMembers
+        # verify no tracking here?
       end
 
       context 'in experiment group for trial_during_signup' do
@@ -133,7 +146,7 @@ RSpec.describe Registrations::GroupsController do
             first_name: user.first_name,
             last_name: user.last_name,
             uid: user.id,
-            skip_email_confirmation:  true,
+            skip_email_confirmation: true,
             gitlab_com_trial: true,
             provider: 'gitlab',
             newsletter_segment: user.email_opted_in
@@ -177,7 +190,7 @@ RSpec.describe Registrations::GroupsController do
             expect(service).to receive(:execute).with(apply_trial_params).and_return({ success: true })
           end
 
-          subject
+          expect(subject).to redirect_to(new_users_sign_up_project_path(namespace_id: group.id, trial: true))
         end
 
         context 'when user chooses no trial' do
@@ -191,7 +204,7 @@ RSpec.describe Registrations::GroupsController do
 
             expect(controller).to receive(:record_experiment_user).with(:trial_during_signup, trial_chosen: false, namespace_id: group.id)
 
-            subject
+            expect(subject).to redirect_to(new_users_sign_up_project_path(namespace_id: group.id, trial: false))
           end
 
           it 'does not call trial_during_signup experiment methods' do
@@ -204,7 +217,6 @@ RSpec.describe Registrations::GroupsController do
       end
 
       it_behaves_like 'hides email confirmation warning'
-      it_behaves_like GroupInviteMembers
 
       context 'when the trial onboarding is active' do
         let_it_be(:group) { create(:group) }
@@ -225,7 +237,7 @@ RSpec.describe Registrations::GroupsController do
           }
         end
 
-        it 'applies the trial to the group and redirects to the project path' do
+        before do
           expect_next_instance_of(::Groups::CreateService) do |service|
             expect(service).to receive(:execute).and_return(group)
           end
@@ -235,8 +247,20 @@ RSpec.describe Registrations::GroupsController do
           expect(controller).to receive(:record_experiment_user).with(:remove_known_trial_form_fields, namespace_id: group.id)
           expect(controller).to receive(:record_experiment_user).with(:trimmed_skip_trial_copy, namespace_id: group.id)
           expect(controller).to receive(:record_experiment_user).with(:trial_registration_with_social_signin, namespace_id: group.id)
+        end
 
-          is_expected.to redirect_to(new_users_sign_up_project_path(namespace_id: group.id, trial: false, trial_onboarding_flow: true))
+        context 'when registration_group_invite experiment is enabled' do
+          it { is_expected.to redirect_to(new_users_sign_up_group_invite_path(group_id: group.id, trial: false, trial_onboarding_flow: true)) }
+          # verify tracking in here?
+        end
+
+        context 'when registration_group_invite experiment is disabled' do
+          before do
+            stub_feature_flags(registration_group_invite: false)
+          end
+
+          it { is_expected.to redirect_to(new_users_sign_up_project_path(namespace_id: group.id, trial: false, trial_onboarding_flow: true)) }
+          # verify no tracking here?
         end
       end
 

@@ -3,11 +3,14 @@
 require 'spec_helper'
 
 RSpec.describe 'User sees new onboarding flow', :js do
+  let_it_be(:user) { create(:user) }
+
   before do
     stub_const('Gitlab::QueryLimiting::Transaction::THRESHOLD', 200)
     stub_experiment_for_subject(onboarding_issues: true)
+    stub_feature_flags(registration_group_invite: false)
     allow(Gitlab).to receive(:com?).and_return(true)
-    gitlab_sign_in(:user)
+    sign_in(user)
     visit users_sign_up_welcome_path
   end
 
