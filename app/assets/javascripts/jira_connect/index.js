@@ -4,7 +4,7 @@ import Translate from '~/vue_shared/translate';
 import GlFeatureFlagsPlugin from '~/vue_shared/gl_feature_flags_plugin';
 
 import JiraConnectApp from './components/app.vue';
-import { addSubscription, removeSubscription } from '~/jira_connect/api';
+import { addSubscription, removeSubscription, getLocation } from '~/jira_connect/api';
 import createStore from './store';
 import { SET_ERROR_MESSAGE } from './store/mutation_types';
 
@@ -20,21 +20,16 @@ const reqFailed = (res, fallbackErrorMessage) => {
   store.commit(SET_ERROR_MESSAGE, error);
 };
 
-const updateSignInLinks = () => {
-  if (typeof AP.getLocation !== 'function') {
-    return;
-  }
-
-  AP.getLocation((location) => {
-    Array.from(document.querySelectorAll('.js-jira-connect-sign-in')).forEach((el) => {
-      const updatedLink = `${el.getAttribute('href')}?return_to=${location}`;
-      el.setAttribute('href', updatedLink);
-    });
+const updateSignInLinks = async () => {
+  const location = await getLocation();
+  Array.from(document.querySelectorAll('.js-jira-connect-sign-in')).forEach((el) => {
+    const updatedLink = `${el.getAttribute('href')}?return_to=${location}`;
+    el.setAttribute('href', updatedLink);
   });
 };
 
 const initRemoveSubscriptionButtonHandlers = () => {
-  Array.from(document.querySelectorAll('.remove-subscription')).forEach((el) => {
+  Array.from(document.querySelectorAll('.js-jira-connect-remove-subscription')).forEach((el) => {
     el.addEventListener('click', function onRemoveSubscriptionClick(e) {
       e.preventDefault();
 
@@ -66,11 +61,11 @@ const initAddSubscriptionFormHandler = () => {
   });
 };
 
-export function initJiraConnect() {
+export async function initJiraConnect() {
   initAddSubscriptionFormHandler();
   initRemoveSubscriptionButtonHandlers();
 
-  updateSignInLinks();
+  await updateSignInLinks();
 
   const el = document.querySelector('.js-jira-connect-app');
   if (!el) {

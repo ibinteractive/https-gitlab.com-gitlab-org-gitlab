@@ -2,48 +2,43 @@ import waitForPromises from 'helpers/wait_for_promises';
 import { initJiraConnect } from '~/jira_connect';
 import { removeSubscription } from '~/jira_connect/api';
 
-jest.mock('~/jira_connect/api', () => ({ removeSubscription: jest.fn().mockResolvedValue() }));
+jest.mock('~/jira_connect/api', () => ({
+  removeSubscription: jest.fn().mockResolvedValue(),
+  getLocation: jest.fn().mockResolvedValue('test/location'),
+}));
 
-describe('JiraConnect', () => {
-  const mockAPLocation = 'test/location';
+describe('initJiraConnect', () => {
   window.AP = {
-    getLocation: jest.fn().mockImplementation((callback) => {
-      return callback(mockAPLocation);
-    }),
     navigator: {
       reload: jest.fn(),
     },
   };
 
+  beforeEach(async () => {
+    setFixtures(`
+      <a class="js-jira-connect-sign-in" href="https://gitlab.com">Sign In</a>
+      <a class="js-jira-connect-sign-in" href="https://gitlab.com">Another Sign In</a>
+
+      <a href="https://gitlab.com/sub1" class="js-jira-connect-remove-subscription">Remove</a>
+      <a href="https://gitlab.com/sub2" class="js-jira-connect-remove-subscription">Remove</a>
+      <a href="https://gitlab.com/sub3" class="js-jira-connect-remove-subscription">Remove</a>
+    `);
+
+    await initJiraConnect();
+  });
+
   describe('Sign in links', () => {
-    beforeEach(() => {
-      setFixtures(`
-          <a class="js-jira-connect-sign-in" href="https://gitlab.com">Sign In</a>
-        `);
-
-      initJiraConnect();
-    });
-
     it('have `return_to` query parameter', () => {
-      const el = document.querySelector('.js-jira-connect-sign-in');
-      expect(el.href).toContain(`return_to=${mockAPLocation}`);
+      Array.from(document.querySelectorAll('.js-jira-connect-sign-in')).forEach((el) => {
+        expect(el.href).toContain('return_to=test/location');
+      });
     });
   });
 
   describe('`remove subscription` buttons', () => {
-    beforeEach(() => {
-      setFixtures(`
-          <a href="https://gitlab.com/sub1" class="remove-subscription">Remove</a>
-          <a href="https://gitlab.com/sub2" class="remove-subscription">Remove</a>
-          <a href="https://gitlab.com/sub3" class="remove-subscription">Remove</a>
-        `);
-
-      initJiraConnect();
-    });
-
     describe('on click', () => {
       it('calls `removeSubscription`', () => {
-        Array.from(document.querySelectorAll('.remove-subscription')).forEach(
+        Array.from(document.querySelectorAll('.js-jira-connect-remove-subscription')).forEach(
           (removeSubscriptionButton) => {
             removeSubscriptionButton.click();
 
