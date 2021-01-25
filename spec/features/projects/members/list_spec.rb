@@ -13,6 +13,8 @@ RSpec.describe 'Project members list' do
 
   before do
     stub_feature_flags(invite_members_group_modal: false)
+    stub_feature_flags(vue_project_members_list: false)
+
     sign_in(user1)
     group.add_owner(user1)
   end
