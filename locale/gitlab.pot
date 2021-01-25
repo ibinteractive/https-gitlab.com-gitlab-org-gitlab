@@ -17688,6 +17688,9 @@ msgstr ""
 msgid "Members|Role updated successfully."
 msgstr ""
 
+msgid "Members|Search groups"
+msgstr ""
+
 msgid "Members|Search invited"
 msgstr ""
 
