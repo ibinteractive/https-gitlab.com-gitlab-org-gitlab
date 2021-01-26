@@ -52,7 +52,7 @@ RSpec.describe Gitlab::Search::Query do
 
     it 'finds the whole value in quotes' do
       expect(subject.term).to eq('some foo')
-      expect(subject.filters[0]).to match(a_hash_including(name: :name, negated: false, value: "MY TEST.TXT"))
+      expect(subject.filters[0]).to include(name: :name, negated: false, value: "MY TEST.TXT")
     end
   end
 end
