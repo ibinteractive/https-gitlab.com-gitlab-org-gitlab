@@ -7,7 +7,9 @@
 # See issue on GitLab https://gitlab.com/gitlab-org/gitlab/-/issues/289836
 
 module Net
-  class HTTP
+  class Protocol; end
+
+  class HTTP < Protocol
     def proxy_user
       if ENVIRONMENT_VARIABLE_IS_MULTIUSER_SAFE && @proxy_from_env
         user = proxy_uri&.user
