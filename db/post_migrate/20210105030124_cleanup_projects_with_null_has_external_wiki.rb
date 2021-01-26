@@ -13,6 +13,7 @@ class CleanupProjectsWithNullHasExternalWiki < ActiveRecord::Migration[6.0]
     belongs_to :project
 
     self.table_name = 'services'
+    self.inheritance_column = :_type_disabled
   end
 
   class Project < ActiveRecord::Base
@@ -71,7 +72,7 @@ class CleanupProjectsWithNullHasExternalWiki < ActiveRecord::Migration[6.0]
       .where(active: true)
 
     # 322 projects are scoped in this query on GitLab.com.
-    Project.where(index_where).each_batch(of: 1000) do |relation|
+    Project.where(index_where).each_batch(of: 1_000) do |relation|
       relation_with_exists_query = relation.where('NOT EXISTS (?)', services_sub_query)
       execute(<<~SQL)
       WITH project_ids_to_update (id) AS (
