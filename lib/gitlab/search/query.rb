@@ -5,6 +5,9 @@ module Gitlab
     class Query < SimpleDelegator
       include EncodingHelper
 
+      QUOTES_REGEXP = %r{\A"|"\Z}.freeze
+      TOKEN_WITH_QUOTES_REGEXP = %r{\s(?=(?:[^"]|"[^"]*")*$)}.freeze
+
       def initialize(query, filter_opts = {}, &block)
         @raw_query = query.dup
         @filters = []
@@ -45,7 +48,7 @@ module Gitlab
           next if input.empty?
 
           filter[:negated] = match.start_with?("-")
-          filter[:value] = parse_filter(filter, input.gsub(/\A"|"\Z/, ''))
+          filter[:value] = parse_filter(filter, input.gsub(QUOTES_REGEXP, ''))
           filter[:regex_value] = Regexp.escape(filter[:value]).gsub('\*', '.*?')
           fragments << match
 
@@ -68,7 +71,7 @@ module Gitlab
         # Positive lookahead for any non-quote char or even number of quotes
         # for example '"search term" path:"foo bar.txt"' would break into
         # ["search term", "path:\"foo bar.txt\""]
-        @raw_query.split(/\s(?=(?:[^"]|"[^"]*")*$)/).reject(&:empty?)
+        @raw_query.split(TOKEN_WITH_QUOTES_REGEXP).reject(&:empty?)
       end
     end
   end
