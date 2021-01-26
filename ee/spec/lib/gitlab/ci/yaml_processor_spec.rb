@@ -29,6 +29,7 @@ RSpec.describe Gitlab::Ci::YamlProcessor do
           when: "on_success",
           allow_failure: false,
           yaml_variables: [],
+          root_variables: [],
           scheduling_type: :stage
         )
         expect(subject.builds[1]).to eq(
@@ -42,6 +43,7 @@ RSpec.describe Gitlab::Ci::YamlProcessor do
           when: "on_success",
           allow_failure: false,
           yaml_variables: [],
+          root_variables: [],
           scheduling_type: :stage
         )
       end
@@ -63,6 +65,7 @@ RSpec.describe Gitlab::Ci::YamlProcessor do
           when: "on_success",
           allow_failure: false,
           yaml_variables: [],
+          root_variables: [],
           scheduling_type: :stage
         )
         expect(subject.builds[1]).to eq(
@@ -79,6 +82,7 @@ RSpec.describe Gitlab::Ci::YamlProcessor do
           when: "on_success",
           allow_failure: false,
           yaml_variables: [],
+          root_variables: [],
           scheduling_type: :stage
         )
       end
@@ -153,6 +157,7 @@ RSpec.describe Gitlab::Ci::YamlProcessor do
           when: 'on_success',
           allow_failure: false,
           yaml_variables: [],
+          root_variables: [],
           scheduling_type: :dag
         )
       end

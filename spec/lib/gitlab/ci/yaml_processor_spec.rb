@@ -43,6 +43,7 @@ module Gitlab
               allow_failure: false,
               when: "on_success",
               yaml_variables: [],
+              root_variables: [],
               scheduling_type: :stage
             })
           end
@@ -74,6 +75,7 @@ module Gitlab
               allow_failure: false,
               when: 'on_success',
               yaml_variables: [],
+              root_variables: [],
               scheduling_type: :stage
             })
           end
@@ -111,7 +113,8 @@ module Gitlab
               tag_list: %w[A B],
               allow_failure: false,
               when: "on_success",
-              yaml_variables: []
+              yaml_variables: [],
+              root_variables: []
             })
           end
         end
@@ -158,6 +161,7 @@ module Gitlab
               allow_failure: false,
               when: "on_success",
               yaml_variables: [],
+              root_variables: [],
               scheduling_type: :stage
             })
           end
@@ -347,6 +351,7 @@ module Gitlab
                   allow_failure: false,
                   when: "on_success",
                   yaml_variables: [],
+                  root_variables: [],
                   scheduling_type: :stage,
                   options: { script: ["rspec"] },
                   only: { refs: ["branches"] } }] },
@@ -359,6 +364,7 @@ module Gitlab
                   allow_failure: false,
                   when: "on_success",
                   yaml_variables: [],
+                  root_variables: [],
                   scheduling_type: :stage,
                   options: { script: ["cap prod"] },
                   only: { refs: ["tags"] } }] },
@@ -853,6 +859,7 @@ module Gitlab
               allow_failure: false,
               when: "on_success",
               yaml_variables: [],
+              root_variables: [],
               scheduling_type: :stage
             })
           end
@@ -886,6 +893,7 @@ module Gitlab
               allow_failure: false,
               when: "on_success",
               yaml_variables: [],
+              root_variables: [],
               scheduling_type: :stage
             })
           end
@@ -915,6 +923,7 @@ module Gitlab
               allow_failure: false,
               when: "on_success",
               yaml_variables: [],
+              root_variables: [],
               scheduling_type: :stage
             })
           end
@@ -942,6 +951,7 @@ module Gitlab
               allow_failure: false,
               when: "on_success",
               yaml_variables: [],
+              root_variables: [],
               scheduling_type: :stage
             })
           end
@@ -952,6 +962,7 @@ module Gitlab
         subject { Gitlab::Ci::YamlProcessor.new(YAML.dump(config)).execute }
 
         let(:build_variables) { subject.builds.first[:yaml_variables] }
+        let(:root_variables) { subject.builds.first[:root_variables] }
 
         context 'when global variables are defined' do
           let(:variables) do
@@ -967,7 +978,8 @@ module Gitlab
           end
 
           it 'returns global variables' do
-            expect(build_variables).to contain_exactly(
+            expect(build_variables).to eq([])
+            expect(root_variables).to contain_exactly(
               { key: 'VAR1', value: 'value1', public: true },
               { key: 'VAR2', value: 'value2', public: true }
             )
@@ -994,12 +1006,15 @@ module Gitlab
           context 'when no inheritance is specified' do
             let(:inherit) { }
 
-            it 'returns all unique variables' do
+            it 'returns all variables' do
               expect(build_variables).to contain_exactly(
-                { key: 'VAR4', value: 'global4', public: true },
-                { key: 'VAR3', value: 'global3', public: true },
                 { key: 'VAR1', value: 'value1', public: true },
                 { key: 'VAR2', value: 'value2', public: true }
+              )
+              expect(root_variables).to contain_exactly(
+                { key: 'VAR1', value: 'global1', public: true },
+                { key: 'VAR3', value: 'global3', public: true },
+                { key: 'VAR4', value: 'global4', public: true }
               )
             end
           end
@@ -1012,17 +1027,21 @@ module Gitlab
                 { key: 'VAR1', value: 'value1', public: true },
                 { key: 'VAR2', value: 'value2', public: true }
               )
+              expect(root_variables).to eq([])
             end
           end
 
           context 'when specific variables are to inherited' do
             let(:inherit) { { variables: %w[VAR1 VAR4] } }
 
-            it 'returns all unique variables and inherits only specified variables' do
+            it 'returns all variables and inherits only specified variables' do
               expect(build_variables).to contain_exactly(
-                { key: 'VAR4', value: 'global4', public: true },
                 { key: 'VAR1', value: 'value1', public: true },
                 { key: 'VAR2', value: 'value2', public: true }
+              )
+              expect(root_variables).to contain_exactly(
+                { key: 'VAR1', value: 'global1', public: true },
+                { key: 'VAR4', value: 'global4', public: true }
               )
             end
           end
@@ -1046,6 +1065,7 @@ module Gitlab
                 { key: 'VAR1', value: 'value1', public: true },
                 { key: 'VAR2', value: 'value2', public: true }
               )
+              expect(root_variables).to eq([])
             end
           end
 
@@ -1070,6 +1090,8 @@ module Gitlab
                 #
                 expect(build_variables).to be_an_instance_of(Array)
                 expect(build_variables).to be_empty
+
+                expect(root_variables).to eq([])
               end
             end
           end
@@ -1086,6 +1108,8 @@ module Gitlab
           it 'returns empty array' do
             expect(build_variables).to be_an_instance_of(Array)
             expect(build_variables).to be_empty
+
+            expect(root_variables).to eq([])
           end
         end
       end
@@ -1554,6 +1578,7 @@ module Gitlab
             when: "on_success",
             allow_failure: false,
             yaml_variables: [],
+            root_variables: [],
             scheduling_type: :stage
           })
         end
@@ -1917,6 +1942,7 @@ module Gitlab
               when: "on_success",
               allow_failure: false,
               yaml_variables: [],
+              root_variables: [],
               scheduling_type: :stage
             )
             expect(subject.builds[4]).to eq(
@@ -1932,6 +1958,7 @@ module Gitlab
               when: "on_success",
               allow_failure: false,
               yaml_variables: [],
+              root_variables: [],
               scheduling_type: :dag
             )
           end
@@ -1959,6 +1986,7 @@ module Gitlab
               when: "on_success",
               allow_failure: false,
               yaml_variables: [],
+              root_variables: [],
               scheduling_type: :stage
             )
             expect(subject.builds[4]).to eq(
@@ -1976,6 +2004,7 @@ module Gitlab
               when: "on_success",
               allow_failure: false,
               yaml_variables: [],
+              root_variables: [],
               scheduling_type: :dag
             )
           end
@@ -1999,6 +2028,7 @@ module Gitlab
               when: "on_success",
               allow_failure: false,
               yaml_variables: [],
+              root_variables: [],
               scheduling_type: :dag
             )
           end
@@ -2030,6 +2060,7 @@ module Gitlab
               when: "on_success",
               allow_failure: false,
               yaml_variables: [],
+              root_variables: [],
               scheduling_type: :dag
             )
           end
@@ -2228,6 +2259,7 @@ module Gitlab
               when: "on_success",
               allow_failure: false,
               yaml_variables: [],
+              root_variables: [],
               scheduling_type: :stage
             })
           end
@@ -2275,6 +2307,7 @@ module Gitlab
               when: "on_success",
               allow_failure: false,
               yaml_variables: [],
+              root_variables: [],
               scheduling_type: :stage
             })
             expect(subject.second).to eq({
@@ -2288,6 +2321,7 @@ module Gitlab
               when: "on_success",
               allow_failure: false,
               yaml_variables: [],
+              root_variables: [],
               scheduling_type: :stage
             })
           end
