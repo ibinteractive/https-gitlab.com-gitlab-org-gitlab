@@ -199,7 +199,7 @@ module EE
       delegate :closest_gitlab_subscription, to: :namespace
       delegate :jira_vulnerabilities_integration_enabled?, to: :jira_service, allow_nil: true
 
-      delegate :requirements_access_level, to: :project_feature, allow_nil: true
+      delegate :requirements_access_level, :security_and_compliance_access_level, to: :project_feature, allow_nil: true
 
       validates :repository_size_limit,
         numericality: { only_integer: true, greater_than_or_equal_to: 0, allow_nil: true }
