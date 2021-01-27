@@ -35,11 +35,20 @@ module Gitlab
 
         parent_batch_relation = relation_scoped_to_range(table, primary_key, start_id, end_id)
 
-        parent_batch_relation.each_batch(column: primary_key, of: sub_batch_size) do |sub_batch|
-          sub_batch.update_all("#{quoted_copy_to}=#{quoted_copy_from}")
-
-          sleep(PAUSE_SECONDS)
+        query_events = []
+        callback = lambda do |name, start, finish, id, payload|
+          query_events << { duration: (finish - start), sql: payload[:sql] } if payload[:name] =~ /Update All/
         end
+
+        ActiveSupport::Notifications.subscribed(callback, 'sql.active_record') do
+          parent_batch_relation.each_batch(column: primary_key, of: sub_batch_size) do |sub_batch|
+            sub_batch.update_all("#{quoted_copy_to}=#{quoted_copy_from}")
+
+            sleep(PAUSE_SECONDS)
+          end
+        end
+
+        analyze_and_report_queries(table, start_id, end_id, query_events)
 
         # We have to add all arguments when marking a job as succeeded as they
         #  are all used to track the job by `queue_background_migration_jobs_by_range_at_intervals`
@@ -52,12 +61,48 @@ module Gitlab
         ActiveRecord::Base.connection
       end
 
+      def logger
+        @logger ||= ::Gitlab::BackgroundMigration::Logger.build
+      end
+
       def mark_job_as_succeeded(*arguments)
         Gitlab::Database::BackgroundMigrationJob.mark_all_as_succeeded(self.class.name, arguments)
       end
 
       def relation_scoped_to_range(source_table, source_key_column, start_id, stop_id)
         define_batchable_model(source_table).where(source_key_column => start_id..stop_id)
+      end
+
+      def analyze_and_report_queries(table, start_id, end_id, query_events)
+        return if query_events.empty?
+
+        sorted_events = query_events.sort_by { |query_event| query_event[:duration] }
+
+        mean_query_time = calculate_mean_query_time(sorted_events)
+        median_query_time = calculate_median_query_time(sorted_events)
+        longest_query_event = sorted_events.last
+
+        logger.info(<<~MSG)
+          CopyColumnUsingBackgroundMigrationJob for #{table}=(#{start_id},#{end_id}):
+            mean query time: #{mean_query_time}s
+            median query time: #{median_query_time}s
+            longest query event: #{longest_query_event[:duration]}s - #{longest_query_event[:sql]}
+        MSG
+      end
+
+      def calculate_mean_query_time(query_events)
+        query_events.reduce(0) { |total, query_event| total + query_event[:duration] } / query_events.size
+      end
+
+      def calculate_median_query_time(sorted_events)
+        number_of_events = sorted_events.size
+        center_index = number_of_events / 2
+
+        if number_of_events.even?
+          (sorted_events[center_index][:duration] + sorted_events[center_index + 1][:duration]) / 2
+        else
+          sorted_events[center_index][:duration]
+        end
       end
     end
   end
