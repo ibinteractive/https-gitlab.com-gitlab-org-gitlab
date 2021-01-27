@@ -10,29 +10,20 @@ class IssuableExportCsvWorker # rubocop:disable Scalability/IdempotentWorker
   def perform(type, current_user_id, project_id, params)
     user = User.find(current_user_id)
     project = Project.find(project_id)
-    finder_params = map_params(params, project_id)
 
-    export_service(type.to_sym, user, project, finder_params).email(user)
+    issuable_classes = issuable_classes_for(type.to_sym)
+    fields = params.with_indifferent_access.delete(:selected_fields) || []
+    issuables = issuable_classes[:finder].new(user, parse_params(params, project_id)).execute
+    export_service = issuable_classes[:service].new(issuables, project, fields)
+
+    export_service.email(user)
   rescue ActiveRecord::RecordNotFound => error
     logger.error("Failed to export CSV (current_user_id:#{current_user_id}, project_id:#{project_id}): #{error.message}")
   end
 
   private
 
-  def map_params(params, project_id)
-    params
-      .symbolize_keys
-      .except(:sort)
-      .merge(project_id: project_id)
-  end
-
-  def export_service(type, user, project, params)
-    issuable_class = service_classes_for(type)
-    issuables = issuable_class[:finder].new(user, params).execute
-    issuable_class[:service].new(issuables, project)
-  end
-
-  def service_classes_for(type)
+  def issuable_classes_for(type)
     case type
     when :issue
       { finder: IssuesFinder, service: Issues::ExportCsvService }
@@ -41,6 +32,13 @@ class IssuableExportCsvWorker # rubocop:disable Scalability/IdempotentWorker
     else
       raise ArgumentError, type_error_message(type)
     end
+  end
+
+  def parse_params(params, project_id)
+    params
+      .symbolize_keys
+      .except(:sort)
+      .merge(project_id: project_id)
   end
 
   def type_error_message(type)

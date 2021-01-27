@@ -9,8 +9,8 @@ module EE
 
     private
 
-    override :service_classes_for
-    def service_classes_for(type)
+    override :issuable_classes_for
+    def issuable_classes_for(type)
       return super unless type == :requirement
 
       { finder: ::RequirementsManagement::RequirementsFinder, service: ::RequirementsManagement::ExportCsvService }

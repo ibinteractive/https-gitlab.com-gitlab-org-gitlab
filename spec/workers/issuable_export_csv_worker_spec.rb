@@ -53,7 +53,7 @@ RSpec.describe IssuableExportCsvWorker do
     end
 
     it 'calls the MR export service' do
-      expect(MergeRequests::ExportCsvService).to receive(:new).with(anything, project).once.and_call_original
+      expect(MergeRequests::ExportCsvService).to receive(:new).with(anything, project, []).once.and_call_original
 
       subject
     end
