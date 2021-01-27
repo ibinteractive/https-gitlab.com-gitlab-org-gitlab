@@ -354,6 +354,7 @@ RSpec.describe Gitlab::Ci::Config::Entry::Processable do
           it 'does return defined variables' do
             expect(entry.value).to include(
               variables: { 'A' => 'job', 'B' => 'job' },
+              job_variables: { 'A' => 'job', 'B' => 'job' },
               root_variables: {}
             )
           end
@@ -368,7 +369,8 @@ RSpec.describe Gitlab::Ci::Config::Entry::Processable do
 
           it 'does return job and root variables' do
             expect(entry.value).to include(
-              variables: { 'A' => 'job', 'B' => 'job' },
+              variables: { 'A' => 'job', 'B' => 'job', 'C' => 'root', 'D' => 'root' },
+              job_variables: { 'A' => 'job', 'B' => 'job' },
               root_variables: { 'A' => 'root', 'C' => 'root', 'D' => 'root' }
             )
           end
@@ -383,7 +385,9 @@ RSpec.describe Gitlab::Ci::Config::Entry::Processable do
 
             it 'does return job and root variables' do
               expect(entry.value).to include(
-                variables: { 'A' => 'job', 'B' => 'job' }
+                variables: { 'A' => 'job', 'B' => 'job' },
+                job_variables: { 'A' => 'job', 'B' => 'job' },
+                root_variables: {}
               )
             end
           end
@@ -398,7 +402,8 @@ RSpec.describe Gitlab::Ci::Config::Entry::Processable do
 
             it 'does return job and root variables' do
               expect(entry.value).to include(
-                variables: { 'A' => 'job', 'B' => 'job' },
+                variables: { 'A' => 'job', 'B' => 'job', 'D' => 'root' },
+                job_variables: { 'A' => 'job', 'B' => 'job' },
                 root_variables: { 'D' => 'root' }
               )
             end
@@ -468,6 +473,7 @@ RSpec.describe Gitlab::Ci::Config::Entry::Processable do
             stage: 'test',
             only: { refs: %w[branches tags] },
             variables: {},
+            job_variables: {},
             root_variables: {}
           )
         end

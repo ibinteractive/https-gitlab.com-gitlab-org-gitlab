@@ -100,6 +100,7 @@ RSpec.describe Gitlab::Ci::Config::Entry::Jobs do
               stage: 'test',
               trigger: { project: 'my/project' },
               variables: {},
+              job_variables: {},
               root_variables: {},
               scheduling_type: :stage
             },
@@ -110,6 +111,7 @@ RSpec.describe Gitlab::Ci::Config::Entry::Jobs do
               script: ['something'],
               stage: 'test',
               variables: {},
+              job_variables: {},
               root_variables: {},
               scheduling_type: :stage
             })

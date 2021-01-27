@@ -123,10 +123,15 @@ module Gitlab
               stage: stage_value,
               extends: extends,
               rules: rules_value,
-              variables: job_variables,
+              variables: root_and_job_variables, # we keep this to support legacy usage
+              job_variables: job_variables,
               root_variables: root_variables,
               only: only_value,
               except: except_value }.compact
+          end
+
+          def root_and_job_variables
+            root_variables.merge(job_variables)
           end
 
           def job_variables

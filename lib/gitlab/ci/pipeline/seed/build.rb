@@ -204,7 +204,7 @@ module Gitlab
           end
 
           def calculate_yaml_variables(attributes)
-            indexed_job_vars = attributes.delete(:yaml_variables).to_a.index_by { |var| var[:key] }
+            indexed_job_vars = attributes.delete(:job_variables).to_a.index_by { |var| var[:key] }
             indexed_root_vars = attributes.delete(:root_variables).to_a.index_by { |var| var[:key] }
             indexed_ruled_root_vars = @pipeline.yaml_variables.to_a.index_by { |var| var[:key] }
 

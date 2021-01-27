@@ -75,8 +75,8 @@ RSpec.describe Gitlab::Ci::Pipeline::Seed::Build do
       let(:attributes) do
         { name: 'rspec',
           ref: 'master',
-          yaml_variables: [{ key: 'VAR1', value: 'var 1', public: true },
-                           { key: 'VAR2', value: 'var 2', public: true }],
+          job_variables: [{ key: 'VAR1', value: 'var 1', public: true },
+                          { key: 'VAR2', value: 'var 2', public: true }],
           rules: [{ if: '$VAR == null', variables: { VAR1: 'new var 1', VAR3: 'var 3' } }] }
       end
 
@@ -236,8 +236,8 @@ RSpec.describe Gitlab::Ci::Pipeline::Seed::Build do
       let(:attributes) do
         { name: 'rspec',
           ref: 'master',
-          yaml_variables: [{ key: 'VAR2', value: 'var 2', public: true },
-                           { key: 'VAR3', value: 'var 3', public: true }],
+          job_variables: [{ key: 'VAR2', value: 'var 2', public: true },
+                          { key: 'VAR3', value: 'var 3', public: true }],
           root_variables: [{ key: 'VAR1', value: 'var pipeline 1', public: true },
                            { key: 'VAR2', value: 'var pipeline 2', public: true }] }
       end
