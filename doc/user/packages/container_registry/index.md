@@ -577,7 +577,7 @@ Here are examples of regex patterns you may want to use:
 > - It's [deployed behind a feature flag](../../feature_flags.md), disabled by default.
 > - It's disabled on GitLab.com.
 > - It's not recommended for production use.
-> - To use it in GitLab self-managed instances, ask a GitLab administrator to [enable it](#enable-or-disable-limits).
+> - To use it in GitLab self-managed instances, ask a GitLab administrator to [enable it](#enable-or-disable-cleanup-policy-limits).
 
 Cleanup policies are executed as a background process. This process is complex, and depending on the number of tags to delete,
 the process can take time to finish.
@@ -596,7 +596,7 @@ For self-managed instances, those settings can be updated in the [Rails console]
   ApplicationSetting.last.update(container_registry_expiration_policies_worker_capacity: 3)
   ```
 
-Alternatively, once the limits are [enabled](#enable-or-disable-limits), they are available in the [admin area](../../admin_area/index.md) **Settings > CI/CD > Container Registry**.
+Alternatively, once the limits are [enabled](#enable-or-disable-cleanup-policy-limits), they are available in the [admin area](../../admin_area/index.md) **Settings > CI/CD > Container Registry**.
 
 #### Enable or disable cleanup policy limits
 
