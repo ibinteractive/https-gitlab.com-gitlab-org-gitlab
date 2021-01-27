@@ -25814,9 +25814,6 @@ msgstr ""
 msgid "SecurityReports|There was an error adding the comment."
 msgstr ""
 
-msgid "SecurityReports|There was an error creating the issue."
-msgstr ""
-
 msgid "SecurityReports|There was an error creating the merge request."
 msgstr ""
 
@@ -29122,9 +29119,6 @@ msgid "There was an error creating the dashboard, branch name is invalid."
 msgstr ""
 
 msgid "There was an error creating the dashboard, branch named: %{branch} already exists."
-msgstr ""
-
-msgid "There was an error creating the issue"
 msgstr ""
 
 msgid "There was an error deleting the To Do."
@@ -33969,9 +33963,6 @@ msgid "ciReport|TTFB P90"
 msgstr ""
 
 msgid "ciReport|TTFB P95"
-msgstr ""
-
-msgid "ciReport|There was an error creating the issue. Please try again."
 msgstr ""
 
 msgid "ciReport|There was an error creating the merge request. Please try again."
