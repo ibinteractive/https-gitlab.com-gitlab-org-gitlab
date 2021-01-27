@@ -59,7 +59,6 @@ export default {
         state: null,
         confidential: null,
         nav_source: null,
-        repository_ref: null,
         ...ALL_SCOPE_TABS[scope].search,
       };
       visitUrl(setUrlParams(params));
