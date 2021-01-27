@@ -7645,6 +7645,9 @@ msgstr ""
 msgid "ContainerRegistry|Image repository deletion failed"
 msgstr ""
 
+msgid "ContainerRegistry|Image repository not found"
+msgstr ""
+
 msgid "ContainerRegistry|Image repository will be deleted"
 msgstr ""
 
@@ -7676,9 +7679,6 @@ msgid "ContainerRegistry|Missing or insufficient permission, delete button disab
 msgstr ""
 
 msgid "ContainerRegistry|Next cleanup scheduled to run on:"
-msgstr ""
-
-msgid "ContainerRegistry|No image"
 msgstr ""
 
 msgid "ContainerRegistry|Not yet scheduled"
