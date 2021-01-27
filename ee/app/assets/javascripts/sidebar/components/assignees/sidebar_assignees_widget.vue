@@ -1,6 +1,6 @@
 <script>
-import { mapActions, mapGetters, mapState } from 'vuex';
 import { cloneDeep } from 'lodash';
+import Vue from 'vue';
 import {
   GlDropdownItem,
   GlDropdownDivider,
@@ -9,16 +9,18 @@ import {
   GlSearchBoxByType,
   GlLoadingIcon,
 } from '@gitlab/ui';
+import createFlash from '~/flash';
 import { __, n__ } from '~/locale';
 import IssuableAssignees from '~/sidebar/components/assignees/issuable_assignees.vue';
-import BoardEditableItem from '~/boards/components/sidebar/board_editable_item.vue';
+import SidebarEditableItem from '~/sidebar/components/sidebar_editable_item.vue';
 import MultiSelectDropdown from '~/vue_shared/components/sidebar/multiselect_dropdown.vue';
-import getIssueParticipants from '~/vue_shared/components/sidebar/queries/get_issue_participants.query.graphql';
-import searchUsers from '~/boards/graphql/users_search.query.graphql';
+import searchUsers from '~/graphql_shared/queries/users_search.query.graphql';
+
+export const assigneesWidgetState = Vue.observable({
+  updateAssignees: null,
+});
 
 export default {
-  noSearchDelay: 0,
-  searchDelay: 250,
   i18n: {
     unassigned: __('Unassigned'),
     assignee: __('Assignee'),
@@ -26,7 +28,7 @@ export default {
     assignTo: __('Assign to'),
   },
   components: {
-    BoardEditableItem,
+    SidebarEditableItem,
     IssuableAssignees,
     MultiSelectDropdown,
     GlDropdownItem,
@@ -36,53 +38,88 @@ export default {
     GlSearchBoxByType,
     GlLoadingIcon,
   },
+  props: {
+    participantsQuery: {
+      type: Object,
+      required: true,
+    },
+    participantsQueryVariables: {
+      type: Object,
+      required: true,
+    },
+    updateAssigneesMutation: {
+      type: Object,
+      required: true,
+    },
+    updateAssigneesVariables: {
+      type: Object,
+      required: true,
+    },
+    initialAssignees: {
+      type: Array,
+      required: false,
+      default: null,
+    },
+    issuableType: {
+      type: String,
+      required: false,
+      default: 'issue',
+    },
+  },
   data() {
     return {
       search: '',
-      participants: [],
+      issuable: {},
       selected: [],
+      isSettingAssignees: false,
     };
   },
   apollo: {
-    participants: {
+    issuable: {
       query() {
-        return this.isSearchEmpty ? getIssueParticipants : searchUsers;
+        return this.participantsQuery;
       },
       variables() {
-        if (this.isSearchEmpty) {
-          return {
-            id: `gid://gitlab/Issue/${this.activeIssue.iid}`,
-          };
-        }
-
+        return this.participantsQueryVariables;
+      },
+      update(data) {
+        return data.issuable || data.project?.issuable;
+      },
+      result(res) {
+        const issuable = res.data.issuable || res.data.project?.issuable;
+        this.selected = cloneDeep(issuable.assignees.nodes);
+      },
+    },
+    searchUsers: {
+      query: searchUsers,
+      variables() {
         return {
           search: this.search,
         };
       },
       update(data) {
-        if (this.isSearchEmpty) {
-          return data.issue?.participants?.nodes || [];
-        }
-
         return data.users?.nodes || [];
       },
-      debounce() {
-        const { noSearchDelay, searchDelay } = this.$options;
-
-        return this.isSearchEmpty ? noSearchDelay : searchDelay;
+      debounce: 250,
+      skip() {
+        return this.isSearchEmpty;
       },
     },
   },
   computed: {
-    ...mapGetters(['activeIssue']),
-    ...mapState(['isSettingAssignees']),
+    assignees() {
+      return this.issuable?.assignees?.nodes || this.initialAssignees || [];
+    },
+    participants() {
+      return this.isSearchEmpty ? this.issuable?.participants?.nodes : this.searchUsers;
+    },
     assigneeText() {
       return n__('Assignee', '%d Assignees', this.selected.length);
     },
-    unSelectedFiltered() {
-      return this.participants.filter(({ username }) => {
-        return !this.selectedUserNames.includes(username);
-      });
+    unselectedFiltered() {
+      return this.participants
+        ? this.participants.filter(({ username }) => !this.selectedUserNames.includes(username))
+        : [];
     },
     selectedIsEmpty() {
       return this.selected.length === 0;
@@ -98,12 +135,35 @@ export default {
     },
   },
   created() {
-    this.selected = cloneDeep(this.activeIssue.assignees);
+    assigneesWidgetState.updateAssignees = this.updateAssignees;
+  },
+  destroyed() {
+    assigneesWidgetState.updateAssignees = null;
   },
   methods: {
-    ...mapActions(['setAssignees']),
+    updateAssignees(assigneeUsernames) {
+      this.isSettingAssignees = true;
+      return this.$apollo
+        .mutate({
+          mutation: this.updateAssigneesMutation,
+          variables: {
+            ...this.updateAssigneesVariables,
+            assigneeUsernames,
+          },
+        })
+        .then(({ data }) => {
+          this.$emit('assigneesUpdated', data);
+          return data;
+        })
+        .catch(() => {
+          createFlash({ message: __('An error occurred while updating assignees.') });
+        })
+        .finally(() => {
+          this.isSettingAssignees = false;
+        });
+    },
     async assignSelf() {
-      const [currentUserObject] = await this.setAssignees(this.currentUser);
+      const [currentUserObject] = await this.updateAssignees(this.currentUser);
 
       this.selectAssignee(currentUserObject);
     },
@@ -122,7 +182,7 @@ export default {
       this.selected = this.selected.filter((user) => user.username !== name);
     },
     saveAssignees() {
-      this.setAssignees(this.selectedUserNames);
+      this.updateAssignees(this.selectedUserNames);
     },
     isChecked(id) {
       return this.selectedUserNames.includes(id);
@@ -132,9 +192,25 @@ export default {
 </script>
 
 <template>
-  <board-editable-item :loading="isSettingAssignees" :title="assigneeText" @close="saveAssignees">
+  <div
+    v-if="!initialAssignees && this.$apollo.queries.issuable.loading"
+    class="gl-display-flex gl-align-items-center"
+  >
+    {{ __('Assignee') }}
+    <gl-loading-icon size="sm" class="gl-ml-2" />
+  </div>
+  <sidebar-editable-item
+    v-else
+    :loading="isSettingAssignees"
+    :title="assigneeText"
+    @close="saveAssignees"
+  >
     <template #collapsed>
-      <issuable-assignees :users="activeIssue.assignees" @assign-self="assignSelf" />
+      <issuable-assignees
+        :users="assignees"
+        :issuable-type="issuableType"
+        @assign-self="assignSelf"
+      />
     </template>
 
     <template #default>
@@ -147,13 +223,16 @@ export default {
           <gl-search-box-by-type v-model.trim="search" />
         </template>
         <template #items>
-          <gl-loading-icon v-if="$apollo.queries.participants.loading" size="lg" />
+          <gl-loading-icon
+            v-if="$apollo.queries.searchUsers.loading || $apollo.queries.issuable.loading"
+            size="lg"
+          />
           <template v-else>
             <gl-dropdown-item
               :is-checked="selectedIsEmpty"
               data-testid="unassign"
               class="mt-2"
-              @click="selectAssignee()"
+              @click="selectAssignee"
               >{{ $options.i18n.unassigned }}</gl-dropdown-item
             >
             <gl-dropdown-divider data-testid="unassign-divider" />
@@ -168,13 +247,13 @@ export default {
                   :size="32"
                   :label="item.name"
                   :sub-label="item.username"
-                  :src="item.avatarUrl || item.avatar"
+                  :src="item.avatarUrl || item.avatar || item.avatar_url"
                 />
               </gl-avatar-link>
             </gl-dropdown-item>
             <gl-dropdown-divider v-if="!selectedIsEmpty" data-testid="selected-user-divider" />
             <gl-dropdown-item
-              v-for="unselectedUser in unSelectedFiltered"
+              v-for="unselectedUser in unselectedFiltered"
               :key="unselectedUser.id"
               :data-testid="`item_${unselectedUser.name}`"
               @click="selectAssignee(unselectedUser)"
@@ -192,5 +271,5 @@ export default {
         </template>
       </multi-select-dropdown>
     </template>
-  </board-editable-item>
+  </sidebar-editable-item>
 </template>

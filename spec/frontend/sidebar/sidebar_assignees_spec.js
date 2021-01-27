@@ -1,8 +1,8 @@
+import SidebarAssigneesWidget from 'ee_else_ce/sidebar/components/assignees/sidebar_assignees_widget.vue';
 import { shallowMount } from '@vue/test-utils';
 import AxiosMockAdapter from 'axios-mock-adapter';
 import axios from 'axios';
 import SidebarAssignees from '~/sidebar/components/assignees/sidebar_assignees.vue';
-import Assigness from '~/sidebar/components/assignees/assignees.vue';
 import AssigneesRealtime from '~/sidebar/components/assignees/assignees_realtime.vue';
 import SidebarMediator from '~/sidebar/sidebar_mediator';
 import SidebarService from '~/sidebar/services/sidebar_service';
@@ -53,36 +53,15 @@ describe('sidebar assignees', () => {
 
   it('calls the mediator when saves the assignees', () => {
     createComponent();
+    jest.spyOn(wrapper.vm.store, 'setAssigneeData');
 
-    expect(mediator.saveAssignees).not.toHaveBeenCalled();
+    expect(wrapper.vm.store.setAssigneeData).not.toHaveBeenCalled();
 
-    wrapper.vm.saveAssignees();
+    wrapper
+      .find(SidebarAssigneesWidget)
+      .vm.$emit('assigneesUpdated', { issueSetAssignees: { issue: { assignees: [] } } });
 
-    expect(mediator.saveAssignees).toHaveBeenCalled();
-  });
-
-  it('calls the mediator when "assignSelf" method is called', () => {
-    createComponent();
-
-    expect(mediator.assignYourself).not.toHaveBeenCalled();
-    expect(mediator.store.assignees.length).toBe(0);
-
-    wrapper.vm.assignSelf();
-
-    expect(mediator.assignYourself).toHaveBeenCalled();
-    expect(mediator.store.assignees.length).toBe(1);
-  });
-
-  it('hides assignees until fetched', () => {
-    createComponent();
-
-    expect(wrapper.find(Assigness).exists()).toBe(false);
-
-    wrapper.vm.store.isFetching.assignees = false;
-
-    return wrapper.vm.$nextTick(() => {
-      expect(wrapper.find(Assigness).exists()).toBe(true);
-    });
+    expect(wrapper.vm.store.setAssigneeData).toHaveBeenCalled();
   });
 
   describe('when realTimeIssueSidebar is turned on', () => {

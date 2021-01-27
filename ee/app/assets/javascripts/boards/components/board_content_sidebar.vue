@@ -1,15 +1,13 @@
 <script>
 import { mapState, mapActions, mapGetters } from 'vuex';
+import SidebarAssigneesWidget from 'ee_else_ce/sidebar/components/assignees/sidebar_assignees_widget.vue';
 import { GlDrawer } from '@gitlab/ui';
 import { ISSUABLE } from '~/boards/constants';
 import { contentTop } from '~/lib/utils/common_utils';
-import IssuableTitle from '~/boards/components/issuable_title.vue';
-import { convertToGraphQLId } from '~/graphql_shared/utils';
 import glFeatureFlagsMixin from '~/vue_shared/mixins/gl_feature_flags_mixin';
 import getIssueParticipants from '~/vue_shared/components/sidebar/queries/get_issue_participants.query.graphql';
 import updateAssigneesMutation from '~/vue_shared/components/sidebar/queries/update_issue_assignees.mutation.graphql';
 import BoardSidebarEpicSelect from './sidebar/board_sidebar_epic_select.vue';
-import SidebarAssigneesWidget from '~/sidebar/components/assignees/sidebar_assignees_widget.vue';
 import BoardSidebarTimeTracker from './sidebar/board_sidebar_time_tracker.vue';
 import BoardSidebarWeightInput from './sidebar/board_sidebar_weight_input.vue';
 import BoardSidebarLabelsSelect from '~/boards/components/sidebar/board_sidebar_labels_select.vue';
@@ -41,10 +39,10 @@ export default {
     showSidebar() {
       return this.sidebarType === ISSUABLE;
     },
-    assigneesQueryVariables() {
+    participantsQueryVariables() {
       return {
-        /* eslint-disable-next-line @gitlab/require-i18n-strings */
-        id: convertToGraphQLId('Issue', this.activeIssue.iid),
+        iid: this.activeIssue.iid,
+        fullPath: this.activeIssue.referencePath.split('#')[0],
       };
     },
     updateAssigneesVariables() {
@@ -73,13 +71,14 @@ export default {
   >
     <template #header>{{ __('Issue details') }}</template>
 
-    <template>
+    <template #default>
+      <board-sidebar-issue-title />
       <sidebar-assignees-widget
-        :assignees-query="$options.getIssueParticipants"
-        :assignees-query-variables="assigneesQueryVariables"
+        :participants-query="$options.getIssueParticipants"
+        :participants-query-variables="participantsQueryVariables"
         :update-assignees-mutation="$options.updateAssigneesMutation"
         :update-assignees-variables="updateAssigneesVariables"
-        :assignees="activeIssue.assignees"
+        :initial-assignees="activeIssue.assignees"
         @assigneesUpdated="updateAssignees"
       />
       <board-sidebar-epic-select />

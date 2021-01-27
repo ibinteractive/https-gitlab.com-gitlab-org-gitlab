@@ -1,10 +1,18 @@
 #import "~/graphql_shared/fragments/user.fragment.graphql"
 
-query issueParticipants($id: IssueID!) {
-  issue(id: $id) {
-    participants {
-      nodes {
-        ...User
+query issueParticipants($fullPath: ID!, $iid: String!) {
+  project(fullPath: $fullPath) {
+    issuable: issue(iid: $iid) {
+      id
+      participants {
+        nodes {
+          ...User
+        }
+      }
+      assignees {
+        nodes {
+          ...User
+        }
       }
     }
   }
