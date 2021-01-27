@@ -188,7 +188,7 @@ RSpec.describe 'Global elastic search', :elastic, :sidekiq_inline do
       submit_search('add')
       select_search_scope('Commits')
 
-      expect(page).to have_selector('.commit-row-description')
+      expect(page).to have_selector('.commit-row-message')
       expect(page).to have_selector('.project-namespace')
     end
 
@@ -198,7 +198,7 @@ RSpec.describe 'Global elastic search', :elastic, :sidekiq_inline do
       submit_search('add')
       select_search_scope('Commits')
 
-      expected_message = "Add directory structure for tree_helper spec"
+      expected_message = "Merge branch 'tree_helper_spec' into 'master'"
 
       expect(page).not_to have_content(expected_message)
 
