@@ -24,12 +24,13 @@ module Gitlab
 
               if result.valid?
                 @command.yaml_processor_result = result
+                @pipeline.yaml_variables = result.workflow_attributes[:yaml_variables]
               else
                 error(result.errors.first, config_error: true)
+                @pipeline.yaml_variables = []
               end
 
               @pipeline.merged_yaml = result.merged_yaml
-              @pipeline.yaml_variables = result.workflow_attributes[:yaml_variables]
 
             rescue => ex
               Gitlab::ErrorTracking.track_exception(ex,
