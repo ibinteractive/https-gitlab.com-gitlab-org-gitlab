@@ -58,6 +58,8 @@ export default {
         page: null,
         state: null,
         confidential: null,
+        nav_source: null,
+        repository_ref: null,
         ...ALL_SCOPE_TABS[scope].search,
       };
       visitUrl(setUrlParams(params));
@@ -91,7 +93,7 @@ export default {
 
 <template>
   <div v-if="shouldShowTabs" class="scrolling-tabs-container inner-page-scroll-tabs">
-    <gl-tabs nav-class="search-filter scrolling-tabs nav-links">
+    <gl-tabs nav-class="search-filter scrolling-tabs search-nav-tabs">
       <gl-tab
         v-for="tab in inflatedTabs"
         :key="tab.scope"
