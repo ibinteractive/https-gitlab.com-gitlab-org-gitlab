@@ -116,29 +116,18 @@ module EE
       tag.div(message.html_safe, data: { testid: 'es-status-marker', enabled: enabled })
     end
 
-    override :search_sort_options_json
-    def search_sort_options_json
+    override :search_sort_options
+    def search_sort_options
+      options = []
       if search_service.use_elasticsearch?
-        options = [
-          {
-            title: _('Most relevant'),
-            sortable: false,
-            sortParam: 'relevant'
-          },
-          {
-            title: _('Created date'),
-            sortable: true,
-            sortParam: {
-              asc: 'created_asc',
-              desc: 'created_desc'
-            }
-          }
-        ]
-
-        options.to_json
-      else
-        super
+        options << {
+          title: _('Most relevant'),
+          sortable: false,
+          sortParam: 'relevant'
+        }
       end
+
+      options + super
     end
 
     private

@@ -611,7 +611,7 @@ RSpec.describe SearchHelper do
     end
   end
 
-  describe '#search_sort_options_json' do
+  describe '#search_sort_options' do
     let(:user) { create(:user) }
 
     mock_created_sort = {
@@ -627,8 +627,8 @@ RSpec.describe SearchHelper do
       allow(self).to receive(:current_user).and_return(user)
     end
 
-    it 'returns the correct JSON object' do
-      expect(search_sort_options_json).to eq([mock_created_sort].to_json)
+    it 'returns the correct data' do
+      expect(search_sort_options).to eq([mock_created_sort])
     end
   end
 end

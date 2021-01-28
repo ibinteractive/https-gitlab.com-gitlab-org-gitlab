@@ -275,14 +275,14 @@ RSpec.describe SearchHelper do
         stub_ee_application_setting(search_using_elasticsearch: true)
       end
 
-      it 'returns the correct JSON object' do
-        expect(search_sort_options_json).to eq([mock_relevant_sort, mock_created_sort].to_json)
+      it 'returns the correct data' do
+        expect(search_sort_options).to eq([mock_relevant_sort, mock_created_sort])
       end
     end
 
     context 'with basic search enabled' do
-      it 'returns the correct JSON object' do
-        expect(search_sort_options_json).to eq([mock_created_sort].to_json)
+      it 'returns the correct data' do
+        expect(search_sort_options).to eq([mock_created_sort])
       end
     end
   end
