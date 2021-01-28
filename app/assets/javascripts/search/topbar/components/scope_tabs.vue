@@ -71,6 +71,10 @@ export default {
       el.classList.remove('hidden');
     },
     getCount(scope) {
+      if (this.isTabActive(scope)) {
+        return { scope, count: this.count };
+      }
+
       const params = { ...this.query, scope };
 
       return axios
