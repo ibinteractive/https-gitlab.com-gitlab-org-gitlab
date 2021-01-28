@@ -324,14 +324,29 @@ RSpec.describe ProjectsController do
       end
     end
 
-    context "redirection from http://someproject.git" do
-      it 'redirects to project page (format.html)' do
-        project = create(:project, :public)
+    context 'redirection from http://someproject.git' do
+      let(:private_project) { create(:project, :private) }
 
-        get :show, params: { namespace_id: project.namespace, id: project }, format: :git
+      it 'redirects to project page (format.html) if the user can see the project' do
+        get :show, params: { namespace_id: public_project.namespace, id: public_project }, format: :git
 
         expect(response).to have_gitlab_http_status(:found)
         expect(response).to redirect_to(namespace_project_path)
+      end
+
+      it 'redirects to the sign in page if the user is not signed in' do
+        get :show, params: { namespace_id: private_project.namespace, id: private_project }, format: :git
+
+        expect(response).to have_gitlab_http_status(:found)
+        expect(response).to redirect_to(new_user_session_path)
+      end
+
+      it 'returns 404 not found if the user is unauthorized' do
+        sign_in(user)
+
+        get :show, params: { namespace_id: private_project.namespace, id: private_project }, format: :git
+
+        expect(response).to have_gitlab_http_status(:not_found)
       end
     end
 
