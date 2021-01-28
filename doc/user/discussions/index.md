@@ -378,6 +378,19 @@ from any device you're logged into.
 
 > - [Introduced](https://gitlab.com/gitlab-org/gitlab-foss/-/issues/18008) in GitLab 11.6.
 > - Custom commit messages for suggestions were [introduced](https://gitlab.com/gitlab-org/gitlab/-/issues/25381) in GitLab 13.8.
+> - Custom commit messages for suggestions was deployed behind a feature flag, disabled by default.
+
+To enable custom commit messages for suggestions:
+
+```ruby
+Feature.enable(:suggestions_custom_commit)
+```
+
+To disable custom commit messages for suggestions:
+
+```ruby
+Feature.disable(:suggestions_custom_commit)
+```
 
 As a reviewer, you're able to suggest code changes with a simple
 Markdown syntax in Merge Request Diff threads. Then, the
