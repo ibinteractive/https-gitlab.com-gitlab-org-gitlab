@@ -4,10 +4,11 @@ class AddSecurityDashboardAccessLevelIntoProjectFeatures < ActiveRecord::Migrati
   include Gitlab::Database::MigrationHelpers
 
   DOWNTIME = false
+  PRIVATE_ACCESS_LEVEL = 10
 
   def up
     with_lock_retries do
-      add_column :project_features, :security_and_compliance_access_level, :integer, default: Featurable::PRIVATE, null: false
+      add_column :project_features, :security_and_compliance_access_level, :integer, default: PRIVATE_ACCESS_LEVEL, null: false
     end
   end
 
