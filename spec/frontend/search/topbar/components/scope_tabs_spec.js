@@ -1,7 +1,8 @@
 import Vuex from 'vuex';
-import { createLocalVue, shallowMount } from '@vue/test-utils';
+import { createLocalVue, mount } from '@vue/test-utils';
+import { extendedWrapper } from 'helpers/vue_test_utils_helper';
 import { GlTabs, GlTab, GlBadge } from '@gitlab/ui';
-import { MOCK_QUERY } from 'jest/search/mock_data';
+import { MOCK_QUERY, MOCK_COUNT } from 'jest/search/mock_data';
 import MockAdapter from 'axios-mock-adapter';
 import axios from '~/lib/utils/axios_utils';
 import ScopeTabs from '~/search/topbar/components/scope_tabs.vue';
@@ -10,7 +11,6 @@ const localVue = createLocalVue();
 localVue.use(Vuex);
 
 const SEARCH_COUNT_PATH = '/search/count';
-const SEARCH_COUNT_RESPONSE = { count: '15' };
 
 describe('ScopeTabs', () => {
   let wrapper;
@@ -18,7 +18,7 @@ describe('ScopeTabs', () => {
 
   beforeEach(() => {
     mock = new MockAdapter(axios);
-    mock.onGet(SEARCH_COUNT_PATH).reply(200, SEARCH_COUNT_RESPONSE);
+    mock.onGet(SEARCH_COUNT_PATH).reply(200, MOCK_COUNT);
   });
 
   const defaultProps = {
@@ -38,14 +38,16 @@ describe('ScopeTabs', () => {
       },
     });
 
-    wrapper = shallowMount(ScopeTabs, {
-      localVue,
-      store,
-      propsData: {
-        ...defaultProps,
-        ...props,
-      },
-    });
+    wrapper = extendedWrapper(
+      mount(ScopeTabs, {
+        localVue,
+        store,
+        propsData: {
+          ...defaultProps,
+          ...props,
+        },
+      }),
+    );
   };
 
   afterEach(() => {
@@ -58,6 +60,7 @@ describe('ScopeTabs', () => {
   const findScopeTabs = () => wrapper.find(GlTabs);
   const findTabs = () => wrapper.findAll(GlTab);
   const findBadges = () => wrapper.findAll(GlBadge);
+  const findBadgeByScope = (scope) => wrapper.findByTestId(scope);
 
   describe('template', () => {
     beforeEach(() => {
@@ -81,8 +84,19 @@ describe('ScopeTabs', () => {
     });
 
     describe('findBadges', () => {
-      it('renders a badge for each scope', () => {
-        expect(findBadges()).toHaveLength(wrapper.props().scopeTabs.length);
+      it('renders a badge for each scope', async () => {
+        await axios.waitForAll().then(() => {
+          expect(mock.history.get).toHaveLength(3);
+          expect(findBadges()).toHaveLength(wrapper.props().scopeTabs.length);
+        });
+      });
+
+      it('sets the variant to neutral for active tab only', async () => {
+        await axios.waitForAll().then(() => {
+          expect(findBadgeByScope('issues').attributes('class')).toContain('badge-neutral');
+          expect(findBadgeByScope('milestones').attributes('class')).toContain('badge-muted');
+          expect(findBadgeByScope('merge_requests').attributes('class')).toContain('badge-muted');
+        });
       });
     });
   });

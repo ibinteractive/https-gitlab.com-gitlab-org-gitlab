@@ -45,3 +45,7 @@ export const MOCK_PROJECTS = [
     id: 'test_2',
   },
 ];
+
+export const MOCK_COUNT = {
+  count: '10',
+};

@@ -34,14 +34,9 @@ export default {
   },
   computed: {
     ...mapState(['query']),
-    search: {
-      get() {
-        return this.query ? this.query.search : '';
-      },
-    },
   },
   async created() {
-    if (!this.search) return;
+    if (!this.query.search) return;
 
     this.inflatedTabs = this.scopeTabs.map((tab) => {
       return { ...ALL_SCOPE_TABS[tab], count: this.isTabActive(tab) ? this.count : '' };
@@ -93,7 +88,7 @@ export default {
 </script>
 
 <template>
-  <div v-if="search" class="scrolling-tabs-container inner-page-scroll-tabs">
+  <div v-if="query.search" class="scrolling-tabs-container inner-page-scroll-tabs">
     <gl-tabs nav-class="search-filter scrolling-tabs search-nav-tabs">
       <gl-tab
         v-for="tab in inflatedTabs"
@@ -107,6 +102,7 @@ export default {
           <gl-badge
             v-show="tab.count"
             :data-scope="tab.scope"
+            :data-testid="tab.scope"
             :variant="isTabActive(tab.scope) ? 'neutral' : 'muted'"
             size="sm"
           >
