@@ -34,9 +34,14 @@ export default {
   },
   computed: {
     ...mapState(['query']),
+    search: {
+      get() {
+        return this.query ? this.query.search : '';
+      },
+    },
   },
   async created() {
-    if (!this.query.search) return;
+    if (!this.search) return;
 
     this.inflatedTabs = this.scopeTabs.map((tab) => {
       return { ...ALL_SCOPE_TABS[tab], count: this.isTabActive(tab) ? this.count : '' };
@@ -83,15 +88,12 @@ export default {
           console.error(`Failed to fetch search count from '${this.countPath}'.`, e);
         });
     },
-    shouldShowTabs() {
-      return this.query.search;
-    },
   },
 };
 </script>
 
 <template>
-  <div v-if="shouldShowTabs" class="scrolling-tabs-container inner-page-scroll-tabs">
+  <div v-if="search" class="scrolling-tabs-container inner-page-scroll-tabs">
     <gl-tabs nav-class="search-filter scrolling-tabs search-nav-tabs">
       <gl-tab
         v-for="tab in inflatedTabs"

@@ -1,6 +1,7 @@
 import Vuex from 'vuex';
 import { createLocalVue, shallowMount } from '@vue/test-utils';
 import { GlTabs, GlBadge } from '@gitlab/ui';
+import { MOCK_QUERY } from 'jest/search/mock_data';
 import MockAdapter from 'axios-mock-adapter';
 import axios from '~/lib/utils/axios_utils';
 import ScopeTabs from '~/search/topbar/components/scope_tabs.vue';
@@ -26,12 +27,12 @@ describe('ScopeTabs', () => {
     count: '10',
   };
 
-  const createComponent = (initialState = {}, props = {}) => {
+  const createComponent = (search = 'test', props = {}, initialState= {}) => {
     const store = new Vuex.Store({
       state: {
         query: {
-          search: 'test',
-          scope: 'issues',
+          ...MOCK_QUERY,
+          search,
         },
         ...initialState,
       },
@@ -63,7 +64,7 @@ describe('ScopeTabs', () => {
     });
 
     it('does not render Scope Tabs if search query is empty', () => {
-      createComponent({ query: {}});
+      createComponent(null, {}, { query: {} });
 
       expect(findScopeTabs().exists()).toBe(false);
     });
@@ -73,12 +74,8 @@ describe('ScopeTabs', () => {
     });
 
     describe('findBadges', () => {
-      beforeEach(() => {
-        createComponent();
-      });
-
       it('renders a badge for each scope', () => {
-        expect(findBadges().wrappers.length).toBe(wrapper.props().scopeTabs.count());
+        expect(findBadges()).toHaveLength(wrapper.props().scopeTabs.length);
       });
     });
   });
