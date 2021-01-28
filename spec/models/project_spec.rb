@@ -558,18 +558,18 @@ RSpec.describe Project, factory_default: :keep do
     end
   end
 
-  describe '#latest_pipeline_locked' do
+  describe '#default_pipeline_lock' do
     let(:project) { build_stubbed(:project) }
 
-    subject { project.latest_pipeline_locked }
+    subject { project.default_pipeline_lock }
 
-    where(:ci_keep_latest_artifact_enabled, :result_pipeline_locked) do
+    where(:keep_latest_artifact_enabled, :result_pipeline_locked) do
       false        | :unlocked
       true         | :artifacts_locked
     end
 
     before do
-      allow(project).to receive(:ci_keep_latest_artifact_enabled?).and_return(ci_keep_latest_artifact_enabled)
+      allow(project).to receive(:keep_latest_artifact_available?).and_return(keep_latest_artifact_enabled)
     end
 
     with_them do

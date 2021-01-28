@@ -139,7 +139,7 @@ module Types
     end
 
     def application_settings
-      ApplicationSetting.find_or_create_without_cache
+      Gitlab::CurrentSettings.current_application_settings
     end
   end
 end

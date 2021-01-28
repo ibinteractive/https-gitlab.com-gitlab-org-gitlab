@@ -43,7 +43,7 @@ RSpec.describe 'getting Application Settings' do
 
     it 'fetches the settings data' do
       # assert against hash to ensure no additional fields are exposed
-      expect(settings_data).to match({ 'keepLatestArtifact' => ApplicationSetting.current_without_cache.keep_latest_artifact })
+      expect(settings_data).to match({ 'keepLatestArtifact' => Gitlab::CurrentSettings.current_application_settings.keep_latest_artifact })
     end
   end
 end

@@ -21,10 +21,9 @@ class ProjectCiCdSetting < ApplicationRecord
     super && ::Feature.enabled?(:forward_deployment_enabled, project, default_enabled: true)
   end
 
-  def keep_latest_artifact_enabled?
+  def keep_latest_artifact_available?
     # The project level feature can only be enabled when the feature is enabled instance wide
-    application_settings = ApplicationSetting.current || ApplicationSetting.create_from_defaults
-    application_settings.keep_latest_artifact? && keep_latest_artifact
+    Gitlab::CurrentSettings.current_application_settings.keep_latest_artifact? && keep_latest_artifact?
   end
 
   private

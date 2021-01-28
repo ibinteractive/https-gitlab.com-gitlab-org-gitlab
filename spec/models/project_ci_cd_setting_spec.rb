@@ -39,13 +39,13 @@ RSpec.describe ProjectCiCdSetting do
     end
   end
 
-  describe '#keep_latest_artifact_enabled?' do
+  describe '#keep_latest_artifact_available?' do
     let(:attrs) { { keep_latest_artifact: project_enabled } }
     let(:project_settings) { described_class.new(attrs) }
 
-    subject { project_settings.keep_latest_artifact_enabled? }
+    subject { project_settings.keep_latest_artifact_available? }
 
-    context 'with application setting null' do
+    context 'without application setting record' do
       where(:project_enabled, :result_keep_latest_artifact) do
         false        | false
         true         | true
@@ -56,7 +56,7 @@ RSpec.describe ProjectCiCdSetting do
       end
     end
 
-    context 'with application setting not null' do
+    context 'with application setting record' do
       where(:instance_enabled, :project_enabled, :result_keep_latest_artifact) do
         false         | false        | false
         false         | true         | false
@@ -65,7 +65,7 @@ RSpec.describe ProjectCiCdSetting do
       end
 
       before do
-        ApplicationSetting.create!(keep_latest_artifact: instance_enabled)
+        Gitlab::CurrentSettings.current_application_settings.update!(keep_latest_artifact: instance_enabled)
       end
 
       with_them do
