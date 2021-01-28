@@ -93,7 +93,7 @@ export default {
 
 <template>
   <div v-if="query.search" class="scrolling-tabs-container inner-page-scroll-tabs">
-    <gl-tabs nav-class="search-filter scrolling-tabs search-nav-tabs">
+    <gl-tabs content-class="gl-p-0" nav-class="search-filter scrolling-tabs search-nav-tabs">
       <gl-tab
         v-for="tab in inflatedTabs"
         :key="tab.scope"
