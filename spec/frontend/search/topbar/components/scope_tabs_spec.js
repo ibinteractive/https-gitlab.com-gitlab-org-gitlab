@@ -1,6 +1,6 @@
 import Vuex from 'vuex';
 import { createLocalVue, shallowMount } from '@vue/test-utils';
-import { GlTabs, GlBadge } from '@gitlab/ui';
+import { GlTabs, GlTab, GlBadge, GlDropdownItem } from '@gitlab/ui';
 import { MOCK_QUERY } from 'jest/search/mock_data';
 import MockAdapter from 'axios-mock-adapter';
 import axios from '~/lib/utils/axios_utils';
@@ -56,7 +56,8 @@ describe('ScopeTabs', () => {
   });
 
   const findScopeTabs = () => wrapper.find(GlTabs);
-  const findBadges = () => findScopeTabs().findAll(GlBadge);
+  const findTabs = () => wrapper.findAll(GlTab);
+  const findBadges = () => wrapper.findAll(GlBadge);
 
   describe('template', () => {
     beforeEach(() => {
@@ -73,10 +74,16 @@ describe('ScopeTabs', () => {
       expect(findScopeTabs().exists()).toBe(true);
     });
 
+    describe('findTabs', () => {
+      it('renders a tab for each scope', () => {
+        expect(findTabs()).toHaveLength(wrapper.props().scopeTabs.length);
+      });
+    });
+
     describe('findBadges', () => {
       it('renders a badge for each scope', () => {
         expect(findBadges()).toHaveLength(wrapper.props().scopeTabs.length);
-      });
+      })
     });
   });
 });
