@@ -27,7 +27,7 @@ describe('ScopeTabs', () => {
     count: '10',
   };
 
-  const createComponent = (search = 'test', props = {}, initialState= {}) => {
+  const createComponent = (search = 'test', props = {}, initialState = {}) => {
     const store = new Vuex.Store({
       state: {
         query: {
@@ -46,7 +46,7 @@ describe('ScopeTabs', () => {
         ...props,
       },
     });
-  }
+  };
 
   afterEach(() => {
     wrapper.destroy();
@@ -83,7 +83,7 @@ describe('ScopeTabs', () => {
     describe('findBadges', () => {
       it('renders a badge for each scope', () => {
         expect(findBadges()).toHaveLength(wrapper.props().scopeTabs.length);
-      })
+      });
     });
   });
 });
