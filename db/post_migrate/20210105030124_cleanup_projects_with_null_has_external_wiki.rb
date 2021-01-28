@@ -5,6 +5,7 @@ class CleanupProjectsWithNullHasExternalWiki < ActiveRecord::Migration[6.0]
 
   DOWNTIME = false
   TMP_INDEX_NAME = 'tmp_index_projects_on_id_where_has_external_wiki_is_true_null'.freeze
+  BATCH_SIZE = 100
 
   disable_ddl_transaction!
 
@@ -37,7 +38,7 @@ class CleanupProjectsWithNullHasExternalWiki < ActiveRecord::Migration[6.0]
     # 11 projects are scoped in this query on GitLab.com.
     scope = Service.where(active: true, type: 'ExternalWikiService').where.not(project_id: nil)
 
-    scope.each_batch(of: 100) do |relation|
+    scope.each_batch(of: BATCH_SIZE) do |relation|
       scope_with_projects = relation
         .joins(:project)
         .select('project_id')
@@ -72,7 +73,7 @@ class CleanupProjectsWithNullHasExternalWiki < ActiveRecord::Migration[6.0]
       .where(active: true)
 
     # 322 projects are scoped in this query on GitLab.com.
-    Project.where(index_where).each_batch(of: 1_000) do |relation|
+    Project.where(index_where).each_batch(of: BATCH_SIZE) do |relation|
       relation_with_exists_query = relation.where('NOT EXISTS (?)', services_sub_query)
       execute(<<~SQL)
       WITH project_ids_to_update (id) AS (
