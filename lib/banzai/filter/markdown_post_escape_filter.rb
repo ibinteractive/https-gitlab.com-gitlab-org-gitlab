@@ -9,6 +9,8 @@ module Banzai
       SPAN_REGEX        = %r{<span>(.*?)</span>}.freeze
 
       def call
+        return doc unless result[:escaped_literals]
+
         # For any literals that actually didn't get escape processed
         # (for example in code blocks), remove the special sequence.
         html.gsub!(NOT_LITERAL_REGEX, '\1')

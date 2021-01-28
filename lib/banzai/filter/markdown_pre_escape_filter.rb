@@ -26,10 +26,15 @@ module Banzai
     class MarkdownPreEscapeFilter < HTML::Pipeline::TextFilter
       ASCII_PUNCTUATION   = %r{([\\][!"#$%&'()*+,-./:;<=>?@\[\\\]^_`{|}~])}.freeze
       LITERAL_KEYWORD     = 'cmliteral'
-      LITERAL_PLACEHOLDER = "#{LITERAL_KEYWORD}-\\1-#{LITERAL_KEYWORD}".freeze
 
       def call
-        @text.gsub(ASCII_PUNCTUATION, LITERAL_PLACEHOLDER)
+        @text.gsub(ASCII_PUNCTUATION) do |match|
+          # The majority of markdown does not have literals.  If none
+          # are found, we can bypass the post filter
+          result[:escaped_literals] = true
+
+          "#{LITERAL_KEYWORD}-#{match}-#{LITERAL_KEYWORD}"
+        end
       end
     end
   end

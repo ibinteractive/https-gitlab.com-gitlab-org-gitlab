@@ -10,9 +10,11 @@ RSpec.describe Banzai::Pipeline::PlainMarkdownPipeline do
     let_it_be(:issue)   { create(:issue, project: project) }
 
     def correct_html_included(markdown, expected)
-      output = described_class.to_html(markdown, {})
+      result = described_class.call(markdown, {})
 
-      expect(output).to include(expected)
+      expect(result[:output].to_html).to include(expected)
+
+      result
     end
 
     # Test strings taken from https://spec.commonmark.org/0.29/#backslash-escapes
@@ -21,16 +23,19 @@ RSpec.describe Banzai::Pipeline::PlainMarkdownPipeline do
         markdown = %q(\!\"\#\$\%\&\'\*\+\,\-\.\/\:\;\<\=\>\?\@\[\]\^\_\`\{\|\}\~) + %q[\(\)\\\\]
         punctuation = %w(! " # $ % &amp; ' * + , - . / : ; &lt; = &gt; ? @ [ \\ ] ^ _ ` { | } ~) + %w[( )]
 
-        output = described_class.to_html(markdown, project: project)
+        result = described_class.call(markdown, project: project)
+        output = result[:output].to_html
 
         punctuation.each { |char| expect(output).to include("<span>#{char}</span>") }
+        expect(result[:escaped_literals]).to be_truthy
       end
 
       it 'does not convert other characters to literals' do
         markdown = %q(\→\A\a\ \3\φ\«)
         expected = '\→\A\a\ \3\φ\«'
 
-        correct_html_included(markdown, expected)
+        result = correct_html_included(markdown, expected)
+        expect(result[:escaped_literals]).to be_falsey
       end
 
       describe 'escaped characters are treated as regular characters and do not have their usual Markdown meanings' do
