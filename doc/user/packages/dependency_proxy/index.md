@@ -10,17 +10,13 @@ info: To determine the technical writer assigned to the Stage/Group associated w
 > - [Moved](https://gitlab.com/gitlab-org/gitlab/-/issues/273655) to [GitLab Core](https://about.gitlab.com/pricing/) in GitLab 13.6.
 > - [Support for private groups](https://gitlab.com/gitlab-org/gitlab/-/issues/11582) in [GitLab Core](https://about.gitlab.com/pricing/) 13.7.
 > - Anonymous access to images in public groups is no longer available starting in [GitLab Core](https://about.gitlab.com/pricing/) 13.7.
+> - [Support for pull-by-digest and Docker version 20.x](https://gitlab.com/gitlab-org/gitlab/-/issues/290944) in [GitLab Core](https://about.gitlab.com/pricing/) 13.9.
 
 The GitLab Dependency Proxy is a local proxy you can use for your frequently-accessed
 upstream images.
 
 In the case of CI/CD, the Dependency Proxy receives a request and returns the
 upstream image from a registry, acting as a pull-through cache.
-
-NOTE:
-The Dependency Proxy is not compatible with Docker version 20.x and later.
-If you are using the Dependency Proxy, Docker version 19.x.x is recommended until
-[issue #290944](https://gitlab.com/gitlab-org/gitlab/-/issues/290944) is resolved.
 
 ## Prerequisites
 
