@@ -15,11 +15,12 @@ module IncidentManagement
     validates :ends_at, presence: true
     validate :timeframes_do_not_overlap, if: :rotation
 
+    scope :order_starts_at_desc, -> { order(starts_at: :desc) }
     scope :for_timeframe, -> (starts_at, ends_at) do
+      return none unless starts_at.to_i < ends_at.to_i
+
       where("tstzrange(starts_at, ends_at, '[)') && tstzrange(?, ?, '[)')", starts_at, ends_at)
     end
-
-    scope :order_starts_at_desc, -> { order(starts_at: :desc) }
 
     private
 

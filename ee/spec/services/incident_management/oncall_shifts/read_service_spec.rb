@@ -3,23 +3,25 @@
 require 'spec_helper'
 
 RSpec.describe ::IncidentManagement::OncallShifts::ReadService do
-  let_it_be_with_refind(:rotation) { create(:incident_management_oncall_rotation) }
-  let_it_be(:participant) { create(:incident_management_oncall_participant, :with_developer_access, rotation: rotation) }
-  let_it_be(:project) { rotation.project }
   let_it_be(:user_with_permissions) { create(:user) }
   let_it_be(:user_without_permissions) { create(:user) }
   let_it_be(:current_user) { user_with_permissions }
 
-  let_it_be(:existing_shift) do
-    participant = create(:incident_management_oncall_participant, :with_developer_access, rotation: rotation)
-    create(:incident_management_oncall_shift, rotation: rotation, participant: participant, starts_at: rotation.starts_at, ends_at: rotation.shift_duration.since(rotation.starts_at))
-  end
+  let_it_be_with_refind(:rotation) { create(:incident_management_oncall_rotation, length: 1, length_unit: :days) }
+  let_it_be(:participant) { create(:incident_management_oncall_participant, :with_developer_access, rotation: rotation) }
+  let_it_be(:project) { rotation.project }
+
+  let_it_be(:persisted_first_shift) { create(:incident_management_oncall_shift, participant: participant) }
+  let_it_be(:first_shift) { build(:incident_management_oncall_shift, participant: participant) }
+  let_it_be(:second_shift) { build(:incident_management_oncall_shift, participant: participant, starts_at: first_shift.ends_at) }
+  let_it_be(:third_shift) { build(:incident_management_oncall_shift, participant: participant, starts_at: second_shift.ends_at) }
 
   let(:mode) { :combined }
-  let(:params) { { start_time: rotation.starts_at, end_time: 3.weeks.since(rotation.starts_at), mode: mode } }
-  let(:service) { described_class.new(rotation, current_user, **params) }
+  let(:start_time) { rotation.starts_at }
+  let(:end_time) { 3.days.after(start_time) }
+  let(:params) { { start_time: start_time, end_time: end_time, mode: mode } }
 
-  let(:total_shifts_in_time_period) { ((params[:end_time] - params[:start_time]) / rotation.shift_duration).ceil }
+  let(:service) { described_class.new(rotation, current_user, **params) }
 
   before_all do
     project.add_reporter(user_with_permissions)
@@ -37,6 +39,18 @@ RSpec.describe ::IncidentManagement::OncallShifts::ReadService do
       end
     end
 
+    shared_examples 'returns expected shifts' do
+      it 'successfully returns a sorted collection of IncidentManagement::OncallShifts' do
+        expect(execute).to be_success
+
+        shifts = execute.payload[:shifts]
+
+        expect(shifts).to all(be_a(::IncidentManagement::OncallShift))
+        expect(shifts.sort_by(&:starts_at)).to eq(shifts)
+        expect(shifts.map(&:attributes)).to eq(expected_shifts.map(&:attributes))
+      end
+    end
+
     subject(:execute) { service.execute }
 
     context 'when the current_user is anonymous' do
@@ -49,18 +63,6 @@ RSpec.describe ::IncidentManagement::OncallShifts::ReadService do
       let(:current_user) { user_without_permissions }
 
       it_behaves_like 'error response', 'You have insufficient permissions to view shifts for this rotation'
-    end
-
-    context 'when the start time is after the end time' do
-      let(:params) { { start_time: rotation.starts_at, end_time: rotation.starts_at - 1.day } }
-
-      it_behaves_like 'error response', '`start_time` should precede `end_time`'
-    end
-
-    context 'when timeframe exceeds one month' do
-      let(:params) { { start_time: rotation.starts_at, end_time: rotation.starts_at + 1.month + 1.day } }
-
-      it_behaves_like 'error response', '`end_time` should not exceed one month after `start_time`'
     end
 
     context 'when feature is not available' do
@@ -79,65 +81,70 @@ RSpec.describe ::IncidentManagement::OncallShifts::ReadService do
       it_behaves_like 'error response', 'Your license does not support on-call rotations'
     end
 
-    context 'with valid params' do
-      shared_examples 'generates valid shifts' do
-        it 'successfully returns a sorted collection of IncidentManagement::OncallShifts' do
-          expect(execute).to be_success
+    context 'when the start time is after the end time' do
+      let(:end_time) { 1.day.before(start_time) }
 
-          shifts = execute.payload[:shifts]
+      it_behaves_like 'error response', '`start_time` should precede `end_time`'
+    end
 
-          expect(shifts).to all(be_a(::IncidentManagement::OncallShift))
-          expect(shifts).to all(be_valid)
-          expect(shifts.sort_by(&:starts_at)).to eq(shifts)
+    context 'when timeframe exceeds one month' do
+      let(:end_time) { 2.months.after(start_time) }
+
+      it_behaves_like 'error response', '`end_time` should not exceed one month after `start_time`'
+    end
+
+    context 'when timeframe is exactly 1 month' do
+      let(:start_time) { rotation.starts_at.beginning_of_day }
+      let(:end_time) { 1.month.after(start_time).end_of_day }
+
+      it { is_expected.to be_success }
+    end
+
+    context 'combined mode (default)' do
+      around do |example|
+        travel_to(current_time) { example.run }
+      end
+
+      context 'when timeframe spans the current time' do
+        let(:current_time) { 5.minutes.after(start_time) }
+        let(:expected_shifts) { [persisted_first_shift, second_shift, third_shift] }
+
+        include_examples 'returns expected shifts'
+
+        context 'without a mode specified' do
+          let(:params) { { start_time: start_time, end_time: end_time } }
+
+          include_examples 'returns expected shifts'
         end
       end
 
-      context 'combined mode (default)' do
-        include_examples 'generates valid shifts'
+      context 'when timeframe is entirely in the past' do
+        let(:current_time) { 5.minutes.after(end_time) }
+        let(:expected_shifts) { [persisted_first_shift] }
 
-        context 'when timeframe is exactly 1 month' do
-          let(:params) { { start_time: rotation.starts_at.beginning_of_day, end_time: (rotation.starts_at + 1.month).end_of_day } }
-
-          it { is_expected.to be_success }
-        end
-
-        it 'returns shifts including the persisted ones' do
-          expect(execute).to be_success
-
-          shifts = execute.payload[:shifts]
-          expect(shifts.count).to eq(total_shifts_in_time_period)
-          expect(shifts).to include(existing_shift)
-          expect(shifts.first.starts_at).to be <= params[:start_time]
-          expect(shifts.last.ends_at).to be >= params[:end_time]
-        end
+        include_examples 'returns expected shifts'
       end
 
-      context 'historic mode' do
-        let(:mode) { :historic }
+      context 'when timeframe is entirely in the future' do
+        let(:current_time) { 5.minutes.before(start_time) }
+        let(:expected_shifts) { [first_shift, second_shift, third_shift] }
 
-        include_examples 'generates valid shifts'
-
-        it 'returns the persisted shifts' do
-          shifts = execute.payload[:shifts]
-
-          expect(shifts.count).to eq(rotation.shifts.for_timeframe(params[:start_time], params[:end_time]).count)
-          expect(shifts).to include(existing_shift)
-          expect(shifts.map(&:persisted?)).to all(eq(true))
-        end
+        include_examples 'returns expected shifts'
       end
+    end
 
-      context 'future mode' do
-        let(:mode) { :future }
+    context 'historic mode' do
+      let(:mode) { :historic }
+      let(:expected_shifts) { [persisted_first_shift] }
 
-        it 'returns shifts excluding the persisted ones' do
-          shifts = execute.payload[:shifts]
+      include_examples 'returns expected shifts'
+    end
 
-          expect(shifts.count).to eq(total_shifts_in_time_period - rotation.shifts.count)
-          expect(shifts).not_to include(existing_shift)
-          expect(shifts.last.ends_at).to be >= params[:end_time]
-          expect(shifts.map(&:persisted?)).to all(eq(false))
-        end
-      end
+    context 'predicted mode' do
+      let(:mode) { :predicted }
+      let(:expected_shifts) { [first_shift, second_shift, third_shift] }
+
+      include_examples 'returns expected shifts'
     end
   end
 end

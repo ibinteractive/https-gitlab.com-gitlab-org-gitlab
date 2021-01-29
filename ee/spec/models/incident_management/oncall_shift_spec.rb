@@ -91,6 +91,12 @@ RSpec.describe IncidentManagement::OncallShift do
         # tue_to_wed - Ends as timeframe starts
         # sat_to_sun - Starts as timeframe ends
       end
+
+      context 'for invalid timeframe' do
+        subject { described_class.for_timeframe(saturday, friday) }
+
+        it { is_expected.to eq described_class.none }
+      end
     end
 
     describe '.order_starts_at_desc' do
