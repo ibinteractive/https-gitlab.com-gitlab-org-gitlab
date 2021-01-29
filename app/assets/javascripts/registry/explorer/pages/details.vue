@@ -102,6 +102,9 @@ export default {
     showPagination() {
       return this.tagsPageInfo.hasPreviousPage || this.tagsPageInfo.hasNextPage;
     },
+    hasNoTags() {
+      return this.tags.length === 0;
+    },
   },
   methods: {
     updateBreadcrumb() {
@@ -206,7 +209,7 @@ export default {
 
       <tags-loader v-if="isLoading" />
       <template v-else>
-        <empty-state v-if="tags.length === 0" :no-containers-image="config.noContainersImage" />
+        <empty-state v-if="hasNoTags" :no-containers-image="config.noContainersImage" />
         <template v-else>
           <tags-list :tags="tags" :is-mobile="isMobile" @delete="deleteTags" />
           <div class="gl-display-flex gl-justify-content-center">
