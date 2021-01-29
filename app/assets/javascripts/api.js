@@ -83,6 +83,7 @@ const Api = {
   featureFlagUserList: '/api/:version/projects/:id/feature_flags_user_lists/:list_iid',
   billableGroupMembersPath: '/api/:version/groups/:id/billable_members',
   containerRegistryDetailsPath: '/api/:version/registry/repositories/:id/',
+  globalSearchCountsPath: '/search/count',
 
   group(groupId, callback = () => {}) {
     const url = Api.buildUrl(Api.groupPath).replace(':id', groupId);
@@ -905,6 +906,10 @@ const Api = {
         callback(data);
         return { data, headers };
       });
+  },
+  getGlobalSearchCounts(params = {}) {
+    const url = Api.buildUrl(this.globalSearchCountsPath);
+    return axios.get(url, { params });
   },
 };
 

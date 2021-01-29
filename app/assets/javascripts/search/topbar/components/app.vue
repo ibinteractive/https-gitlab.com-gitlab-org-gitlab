@@ -36,10 +36,6 @@ export default {
       required: false,
       default: null,
     },
-    countPath: {
-      type: String,
-      required: true,
-    },
   },
   computed: {
     ...mapState(['query']),
@@ -87,6 +83,6 @@ export default {
         }}</gl-button>
       </section>
     </gl-form>
-    <scope-tabs :scope-tabs="scopeTabs" :count="count" :count-path="countPath" />
+    <scope-tabs v-if="query.search" :scope-tabs="scopeTabs" :count="count" />
   </section>
 </template>

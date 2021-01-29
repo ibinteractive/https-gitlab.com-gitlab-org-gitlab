@@ -34,23 +34,8 @@ $search-topbar-min-height: 119px;
 }
 
 .search-nav-tabs {
-  overflow-x: auto;
   overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  display: flex;
   flex-wrap: nowrap;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
-
-  li {
-    display: flex;
-
-    a {
-      white-space: nowrap;
-    }
-  }
 }
 
 .search form:hover,
