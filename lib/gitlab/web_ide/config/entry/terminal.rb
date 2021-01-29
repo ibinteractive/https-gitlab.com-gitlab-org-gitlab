@@ -52,7 +52,8 @@ module Gitlab
 
           def to_hash
             { tag_list: tags || [],
-              yaml_variables: yaml_variables,
+              yaml_variables: yaml_variables, # we keep this to support legacy usage
+              job_variables: yaml_variables,
               options: {
                 image: image_value,
                 services: services_value,
