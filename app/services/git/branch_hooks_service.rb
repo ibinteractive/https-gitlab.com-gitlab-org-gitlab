@@ -93,11 +93,12 @@ module Git
     def enqueue_ci_config_change_event
       return unless ::Feature.enabled?(:usage_data_unique_users_committing_ciconfigfile, default_enabled: :yaml)
       return unless default_branch?
-      return unless changing_ci_config?
 
-      Gitlab::UsageDataCounters::HLLRedisCounter.track_event(
-        'o_pipeline_authoring_unique_users_committing_ciconfigfile', values: current_user.id
-      )
+      commits_changing_ci_config.each do |commit|
+        Gitlab::UsageDataCounters::HLLRedisCounter.track_event(
+          'o_pipeline_authoring_unique_users_committing_ciconfigfile', values: commit.author_email
+        )
+      end
     end
 
     # Schedules processing of commit messages
@@ -202,9 +203,11 @@ module Git
       set
     end
 
-    def changing_ci_config?
-      commits.flat_map(&:diffs).flat_map(&:diff_files).any? do |diff_file|
-        diff_file.new_path == project.ci_config_path_or_default
+    def commits_changing_ci_config
+      commits.reject(&:merge_commit?).select do |commit|
+        commit.diffs.diff_files.any? do |diff_file|
+          diff_file.new_path == project.ci_config_path_or_default
+        end
       end
     end
   end

@@ -119,12 +119,15 @@ RSpec.describe Git::BranchHooksService do
           allow(Gitlab::UsageDataCounters::HLLRedisCounter).to receive(:track_event)
         end
 
+        let(:tracking_params) do
+          ['o_pipeline_authoring_unique_users_committing_ciconfigfile', values: 'dmitriy.zaporozhets@gmail.com']
+        end
+
         it 'tracks the event' do
           execute_service
 
           expect(Gitlab::UsageDataCounters::HLLRedisCounter)
-            .to have_received(:track_event)
-                  .with('o_pipeline_authoring_unique_users_committing_ciconfigfile', values: user.id)
+            .to have_received(:track_event).with(*tracking_params)
         end
 
         context 'when the FF usage_data_unique_users_committing_ciconfigfile is disabled' do
@@ -136,8 +139,7 @@ RSpec.describe Git::BranchHooksService do
             execute_service
 
             expect(Gitlab::UsageDataCounters::HLLRedisCounter)
-              .not_to have_received(:track_event)
-                        .with('o_pipeline_authoring_unique_users_committing_ciconfigfile', values: user.id)
+              .not_to have_received(:track_event).with(*tracking_params)
           end
         end
 
@@ -148,8 +150,7 @@ RSpec.describe Git::BranchHooksService do
             execute_service
 
             expect(Gitlab::UsageDataCounters::HLLRedisCounter)
-              .not_to have_received(:track_event)
-                        .with('o_pipeline_authoring_unique_users_committing_ciconfigfile', values: user.id)
+              .not_to have_received(:track_event).with(*tracking_params)
           end
         end
 
@@ -162,8 +163,7 @@ RSpec.describe Git::BranchHooksService do
             execute_service
 
             expect(Gitlab::UsageDataCounters::HLLRedisCounter)
-              .not_to have_received(:track_event)
-                        .with('o_pipeline_authoring_unique_users_committing_ciconfigfile', values: user.id)
+              .not_to have_received(:track_event).with(*tracking_params)
           end
         end
       end
