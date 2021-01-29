@@ -73,7 +73,7 @@ module EE
       end
 
       def elasticsearch_helper
-        ::Gitlab::Elastic::Helper.new(client: elasticsearch_client)
+        @elasticsearch_helper ||= ::Gitlab::Elastic::Helper.new(client: elasticsearch_client)
       end
 
       def elasticsearch_client
