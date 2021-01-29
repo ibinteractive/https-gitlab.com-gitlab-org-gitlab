@@ -7,10 +7,10 @@ info: To determine the technical writer assigned to the Stage/Group associated w
 # Dependency Proxy
 
 > - [Introduced](https://gitlab.com/gitlab-org/gitlab/-/issues/7934) in [GitLab Premium](https://about.gitlab.com/pricing/) 11.11.
-> - [Moved](https://gitlab.com/gitlab-org/gitlab/-/issues/273655) to [GitLab Core](https://about.gitlab.com/pricing/) in GitLab 13.6.
-> - [Support for private groups](https://gitlab.com/gitlab-org/gitlab/-/issues/11582) in [GitLab Core](https://about.gitlab.com/pricing/) 13.7.
-> - Anonymous access to images in public groups is no longer available starting in [GitLab Core](https://about.gitlab.com/pricing/) 13.7.
-> - [Support for pull-by-digest and Docker version 20.x](https://gitlab.com/gitlab-org/gitlab/-/issues/290944) in [GitLab Core](https://about.gitlab.com/pricing/) 13.9.
+> - [Moved](https://gitlab.com/gitlab-org/gitlab/-/issues/273655) to [GitLab Free](https://about.gitlab.com/pricing/) in GitLab 13.6.
+> - [Support for private groups](https://gitlab.com/gitlab-org/gitlab/-/issues/11582) in [GitLab Free](https://about.gitlab.com/pricing/) 13.7.
+> - Anonymous access to images in public groups is no longer available starting in [GitLab Free](https://about.gitlab.com/pricing/) 13.7.
+> - [Support for pull-by-digest and Docker version 20.x](https://gitlab.com/gitlab-org/gitlab/-/issues/290944) in [GitLab Free](https://about.gitlab.com/pricing/) 13.9.
 
 The GitLab Dependency Proxy is a local proxy you can use for your frequently-accessed
 upstream images.
@@ -56,7 +56,7 @@ Prerequisites:
 
 ### Authenticate with the Dependency Proxy
 
-> - [Introduced](https://gitlab.com/gitlab-org/gitlab/-/issues/11582) in [GitLab Core](https://about.gitlab.com/pricing/) 13.7.
+> - [Introduced](https://gitlab.com/gitlab-org/gitlab/-/issues/11582) in [GitLab Free](https://about.gitlab.com/pricing/) 13.7.
 > - It's [deployed behind a feature flag](../../feature_flags.md), enabled by default.
 > - It's enabled on GitLab.com.
 > - It's recommended for production use.
@@ -158,7 +158,7 @@ the [Dependency Proxy API](../../../api/dependency_proxy.md).
 
 ## Docker Hub rate limits and the Dependency Proxy
 
-> - [Introduced](https://gitlab.com/gitlab-org/gitlab/-/issues/241639) in [GitLab Core](https://about.gitlab.com/pricing/) 13.7.
+> - [Introduced](https://gitlab.com/gitlab-org/gitlab/-/issues/241639) in [GitLab Free](https://about.gitlab.com/pricing/) 13.7.
 
 <i class="fa fa-youtube-play youtube" aria-hidden="true"></i>
 Watch how to [use the Dependency Proxy to help avoid Docker Hub rate limits](https://youtu.be/Nc4nUo7Pq08).
