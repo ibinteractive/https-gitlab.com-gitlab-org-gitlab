@@ -7,8 +7,8 @@ import UpdateKeepLatestArtifactProjectSetting from './graphql/mutations/update_k
 
 export default {
   errors: {
-    fetchError: __('There was a problem fetching the keep latest artifact setting.'),
-    updateError: __('There was a problem updating the keep latest artifact setting.'),
+    fetchError: __('There was a problem fetching the keep latest artifacts setting.'),
+    updateError: __('There was a problem updating the keep latest artifacts setting.'),
   },
   i18n: {
     enabledHelpText: __(
