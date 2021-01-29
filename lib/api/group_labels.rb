@@ -9,14 +9,10 @@ module API
 
     feature_category :issue_tracking
 
-    LABEL_ENDPOINT_REQUIREMENTS = API::NAMESPACE_OR_PROJECT_REQUIREMENTS.merge(
-      name: API::NO_SLASH_URL_PART_REGEX,
-      label_id: API::NO_SLASH_URL_PART_REGEX)
-
     params do
       requires :id, type: String, desc: 'The ID of a group'
     end
-    resource :groups, requirements: LABEL_ENDPOINT_REQUIREMENTS do
+    resource :groups, requirements: ::API::Labels::LABEL_ENDPOINT_REQUIREMENTS do
       desc 'Get all labels of the group' do
         detail 'This feature was added in GitLab 11.8'
         success Entities::GroupLabel
