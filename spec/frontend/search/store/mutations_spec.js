@@ -71,4 +71,24 @@ describe('Global Search Store Mutations', () => {
       expect(state.query[payload.key]).toBe(payload.value);
     });
   });
+
+  describe('REQUEST_SEARCH_COUNTS', () => {
+    it('sets the count to for the query.scope activeCount', () => {
+      const payload = { scopeTabs: ['issues'], activeCount: '22' };
+      mutations[types.REQUEST_SEARCH_COUNTS](state, payload);
+
+      expect(state.inflatedScopeTabs).toStrictEqual([
+        { scope: 'issues', title: 'Issues', count: '22' },
+      ]);
+    });
+
+    it('sets other scopes count to empty string', () => {
+      const payload = { scopeTabs: ['milestones'], activeCount: '22' };
+      mutations[types.REQUEST_SEARCH_COUNTS](state, payload);
+
+      expect(state.inflatedScopeTabs).toStrictEqual([
+        { scope: 'milestones', title: 'Milestones', count: '' },
+      ]);
+    });
+  });
 });

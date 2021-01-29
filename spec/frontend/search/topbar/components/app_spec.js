@@ -30,9 +30,6 @@ describe('GlobalSearchTopbar', () => {
     wrapper = shallowMount(GlobalSearchTopbar, {
       localVue,
       store,
-      propsData: {
-        countPath: 'search/count',
-      },
     });
   };
 
@@ -58,8 +55,14 @@ describe('GlobalSearchTopbar', () => {
     });
 
     describe('Scope Tabs', () => {
-      it('renders always', () => {
+      it('renders when search param is set', () => {
+        createComponent({ query: { search: 'test' } });
         expect(findScopeTabs().exists()).toBe(true);
+      });
+      it('does not render search param is blank', () => {
+        createComponent({ query: {} });
+
+        expect(findScopeTabs().exists()).toBe(false);
       });
     });
 

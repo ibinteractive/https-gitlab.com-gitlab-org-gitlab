@@ -1530,4 +1530,21 @@ describe('Api', () => {
       });
     });
   });
+
+  describe('getGlobalSearchCounts', () => {
+    it('fetches search count data', () => {
+      const expectedUrl = '/search/count';
+      const apiResponse = { count: 111 };
+      const mockParams = { search: 'test' };
+
+      jest.spyOn(Api, 'buildUrl').mockReturnValue(expectedUrl);
+      jest.spyOn(axios, 'get');
+      mock.onGet(expectedUrl).replyOnce(httpStatus.OK, apiResponse);
+
+      return Api.getGlobalSearchCounts(mockParams).then(({ data }) => {
+        expect(data).toEqual(apiResponse);
+        expect(axios.get).toHaveBeenCalledWith(expectedUrl, { params: mockParams });
+      });
+    });
+  });
 });
