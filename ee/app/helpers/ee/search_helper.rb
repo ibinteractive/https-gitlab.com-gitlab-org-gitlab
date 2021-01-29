@@ -123,7 +123,7 @@ module EE
       tabs = []
 
       tabs << :epics if search_service.show_epics?
-      tabs.concat(ADVANCED_SEARCH_TABS) if search_service.use_elasticsearch?
+      tabs.push(*ADVANCED_SEARCH_TABS) if search_service.use_elasticsearch?
 
       super_tabs = super
       users_index = super_tabs.index(:users) || -1

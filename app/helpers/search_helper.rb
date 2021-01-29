@@ -264,19 +264,17 @@ module SearchHelper
   end
 
   def search_nav_tabs
-    tabs = []
+    return [:snippet_titles] if !@project && @show_snippets
 
-    if @project
-      tabs = PROJECT_SEARCH_TABS.select do |tab|
-        project_search_tabs?(tab)
+    tabs =
+      if @project
+        PROJECT_SEARCH_TABS.select { |tab| project_search_tabs?(tab) }
+      else
+        BASIC_SEARCH_TABS.dup
       end
-    elsif @show_snippets
-      return [:snippet_titles]
-    else
-      tabs.concat(BASIC_SEARCH_TABS)
-    end
 
     tabs << :users if show_user_search_tab?
+
     tabs
   end
 
