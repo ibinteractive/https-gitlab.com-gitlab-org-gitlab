@@ -10,13 +10,11 @@ module IncidentManagement
       # @param params [Hash<Symbol,Any>]
       # @option params - start_time [Time]
       # @option params - end_time [Time]
-      # @option params - mode [:combined, :predicted, :historic]
-      def initialize(rotation, current_user, start_time:, end_time:, mode: :combined)
+      def initialize(rotation, current_user, start_time:, end_time:)
         @rotation = rotation
         @current_user = current_user
         @start_time = start_time
         @end_time = end_time
-        @mode = mode
         @current_time = Time.current
       end
 
@@ -26,41 +24,41 @@ module IncidentManagement
         return error_invalid_range unless start_before_end?
         return error_excessive_range unless under_max_timeframe?
 
-        case mode
-        when :combined
-          persisted_shifts = find_shifts(start_time, [end_time, current_time].min)
-          generated_shifts = generate_shifts([start_time, current_time].max, end_time)
-
-          if persisted_shifts.present?
-            last_persisted_shift = persisted_shifts.last
-
-            # Remove duplicate or overlapping shifts
-            # (persisted shift end time > any generated shift start time)
-            generated_shifts.reject! { |generated_shift| last_persisted_shift.ends_at > generated_shift.starts_at }
-          end
-
-          shifts = Array(persisted_shifts).concat(generated_shifts)
-        when :predicted
-          shifts = generate_shifts(start_time, end_time)
-        when :historic
-          shifts = find_shifts(start_time, end_time)
-        end
+        persisted_shifts = find_shifts
+        generated_shifts = generate_shifts
+        shifts = combine_shifts(persisted_shifts, generated_shifts)
 
         success(shifts)
       end
 
       private
 
-      attr_reader :rotation, :current_user, :start_time, :end_time, :mode, :current_time
+      attr_reader :rotation, :current_user, :start_time, :end_time, :current_time
 
-      def generate_shifts(starts_at, ends_at)
-        ::IncidentManagement::OncallShiftGenerator
-          .new(rotation)
-          .for_timeframe(starts_at: starts_at, ends_at: ends_at)
+      def find_shifts
+        rotation
+          .shifts
+          .for_timeframe(start_time, [end_time, current_time].min)
+          .order_starts_at_desc
       end
 
-      def find_shifts(starts_at, ends_at)
-        rotation.shifts.for_timeframe(starts_at, ends_at).order_starts_at_desc
+      def generate_shifts
+        ::IncidentManagement::OncallShiftGenerator
+          .new(rotation)
+          .for_timeframe(
+            starts_at: [start_time, current_time].max,
+            ends_at: end_time
+          )
+      end
+
+      def combine_shifts(persisted_shifts, generated_shifts)
+        return generated_shifts unless persisted_shifts.present?
+
+        # Remove duplicate or overlapping shifts
+        min_start_time = persisted_shifts.last.ends_at
+        generated_shifts.reject! { |shift| shift.starts_at < min_start_time }
+
+        persisted_shifts + generated_shifts
       end
 
       def available?

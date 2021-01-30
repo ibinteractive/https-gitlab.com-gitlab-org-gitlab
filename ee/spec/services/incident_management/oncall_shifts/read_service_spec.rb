@@ -16,10 +16,9 @@ RSpec.describe ::IncidentManagement::OncallShifts::ReadService do
   let_it_be(:second_shift) { build(:incident_management_oncall_shift, participant: participant, starts_at: first_shift.ends_at) }
   let_it_be(:third_shift) { build(:incident_management_oncall_shift, participant: participant, starts_at: second_shift.ends_at) }
 
-  let(:mode) { :combined }
   let(:start_time) { rotation.starts_at }
   let(:end_time) { 3.days.after(start_time) }
-  let(:params) { { start_time: start_time, end_time: end_time, mode: mode } }
+  let(:params) { { start_time: start_time, end_time: end_time } }
 
   let(:service) { described_class.new(rotation, current_user, **params) }
 
@@ -100,7 +99,7 @@ RSpec.describe ::IncidentManagement::OncallShifts::ReadService do
       it { is_expected.to be_success }
     end
 
-    context 'combined mode (default)' do
+    context 'with time frozen' do
       around do |example|
         travel_to(current_time) { example.run }
       end
@@ -110,12 +109,6 @@ RSpec.describe ::IncidentManagement::OncallShifts::ReadService do
         let(:expected_shifts) { [persisted_first_shift, second_shift, third_shift] }
 
         include_examples 'returns expected shifts'
-
-        context 'without a mode specified' do
-          let(:params) { { start_time: start_time, end_time: end_time } }
-
-          include_examples 'returns expected shifts'
-        end
       end
 
       context 'when timeframe is entirely in the past' do
@@ -131,20 +124,6 @@ RSpec.describe ::IncidentManagement::OncallShifts::ReadService do
 
         include_examples 'returns expected shifts'
       end
-    end
-
-    context 'historic mode' do
-      let(:mode) { :historic }
-      let(:expected_shifts) { [persisted_first_shift] }
-
-      include_examples 'returns expected shifts'
-    end
-
-    context 'predicted mode' do
-      let(:mode) { :predicted }
-      let(:expected_shifts) { [first_shift, second_shift, third_shift] }
-
-      include_examples 'returns expected shifts'
     end
   end
 end
