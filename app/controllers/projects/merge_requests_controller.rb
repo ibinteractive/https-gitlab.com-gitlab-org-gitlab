@@ -11,6 +11,7 @@ class Projects::MergeRequestsController < Projects::MergeRequests::ApplicationCo
   include RecordUserLastActivity
   include SourcegraphDecorator
   include DiffHelper
+  include CommentAndCloseFlag
 
   skip_before_action :merge_request, only: [:index, :bulk_update, :export_csv]
   before_action :apply_diff_view_cookie!, only: [:show]
@@ -43,7 +44,6 @@ class Projects::MergeRequestsController < Projects::MergeRequests::ApplicationCo
     push_frontend_feature_flag(:codequality_mr_diff, @project)
     push_frontend_feature_flag(:suggestions_custom_commit, @project)
     push_frontend_feature_flag(:local_file_reviews, default_enabled: :yaml)
-    push_frontend_feature_flag(:remove_comment_close_reopen, @group)
 
     record_experiment_user(:invite_members_version_a)
     record_experiment_user(:invite_members_version_b)

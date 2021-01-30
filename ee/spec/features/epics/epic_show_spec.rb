@@ -294,9 +294,15 @@ RSpec.describe 'Epic show', :js do
     end
 
     describe 'when open' do
-      context 'when clicking the top `Close epic` button', :aggregate_failures do
-        let(:open_epic) { create(:epic, group: group) }
+      let(:open_epic) { create(:epic, group: group) }
 
+      it_behaves_like 'page with comment and close button', 'Close epic' do
+        def setup
+          visit group_epic_path(group, open_epic)
+        end
+      end
+
+      context 'when clicking the top `Close epic` button', :aggregate_failures do
         before do
           visit group_epic_path(group, open_epic)
         end
@@ -305,8 +311,6 @@ RSpec.describe 'Epic show', :js do
       end
 
       context 'when clicking the bottom `Close epic` button', :aggregate_failures do
-        let(:open_epic) { create(:epic, group: group) }
-
         before do
           visit group_epic_path(group, open_epic)
         end
@@ -316,9 +320,15 @@ RSpec.describe 'Epic show', :js do
     end
 
     describe 'when closed' do
-      context 'when clicking the top `Reopen epic` button', :aggregate_failures do
-        let(:closed_epic) { create(:epic, group: group, state: 'closed') }
+      let(:closed_epic) { create(:epic, group: group, state: 'closed') }
 
+      it_behaves_like 'page with comment and close button', 'Reopen epic' do
+        def setup
+          visit group_epic_path(group, closed_epic)
+        end
+      end
+
+      context 'when clicking the top `Reopen epic` button', :aggregate_failures do
         before do
           visit group_epic_path(group, closed_epic)
         end
@@ -327,8 +337,6 @@ RSpec.describe 'Epic show', :js do
       end
 
       context 'when clicking the bottom `Reopen epic` button', :aggregate_failures do
-        let(:closed_epic) { create(:epic, group: group, state: 'closed') }
-
         before do
           visit group_epic_path(group, closed_epic)
         end

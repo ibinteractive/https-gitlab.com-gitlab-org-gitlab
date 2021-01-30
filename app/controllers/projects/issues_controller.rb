@@ -9,6 +9,7 @@ class Projects::IssuesController < Projects::ApplicationController
   include IssuesCalendar
   include SpammableActions
   include RecordUserLastActivity
+  include CommentAndCloseFlag
 
   ISSUES_EXCEPT_ACTIONS = %i[index calendar new create bulk_update import_csv export_csv service_desk].freeze
   SET_ISSUEABLES_INDEX_ONLY_ACTIONS = %i[index calendar service_desk].freeze
@@ -44,7 +45,6 @@ class Projects::IssuesController < Projects::ApplicationController
     push_frontend_feature_flag(:tribute_autocomplete, @project)
     push_frontend_feature_flag(:vue_issuables_list, project)
     push_frontend_feature_flag(:usage_data_design_action, project, default_enabled: true)
-    push_frontend_feature_flag(:remove_comment_close_reopen, @group)
   end
 
   before_action only: :show do
